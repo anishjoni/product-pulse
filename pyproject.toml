@@ -85,9 +85,9 @@ line-ending = "auto"
 testpaths = ["tests"]
 addopts = "-v --tb=short"
 
-# ── uv ───────────────────────────────────────────────────────────────────────
-[tool.uv]
-dev-dependencies = [
+# ── Dependency groups (uv dev deps) ───────────────────────────────────────────
+[dependency-groups]
+dev = [
     "ruff>=0.3.0",
     "pytest>=8.0.0",
     "pytest-mock>=3.12.0",

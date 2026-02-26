@@ -22,19 +22,24 @@ def run_step(step: str) -> None:
         case "collect":
             from pipeline.collect_appstore import run as collect_appstore
             from pipeline.collect_reddit import run as collect_reddit
+
             collect_reddit()
             collect_appstore()
         case "preprocess":
             from pipeline.preprocess import run as preprocess
+
             preprocess()
         case "topics":
             from pipeline.topic_model import run as topic_model
+
             topic_model()
         case "sentiment":
             from pipeline.sentiment import run as sentiment
+
             sentiment()
         case "synthesize":
             from pipeline.synthesize import run as synthesize
+
             synthesize()
         case _:
             raise ValueError(f"Unknown step: {step}")

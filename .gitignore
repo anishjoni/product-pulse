@@ -21,7 +21,9 @@ dist/
 build/
 
 # Virtual environments
-.venv/
+.venv_s/
+.venv-win/
+.venv-wsl/
 venv/
 env/
 
