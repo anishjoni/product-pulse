@@ -1,5 +1,11 @@
 # Wealthsimple Community Intelligence Platform — Dev Standards
 
+## Branching Strategy
+- **`dev`** — all development work happens here
+- **`main`** — stable milestones only; never commit directly to main
+- Merge `dev` → `main` via PR when a meaningful milestone is reached (e.g. pipeline complete, dashboard ready, demo-ready)
+- CI runs on both branches; `main` should always be green
+
 ## Package Management
 - **Always use `uv`** — never `pip install` directly
 - Install deps: `uv sync`
