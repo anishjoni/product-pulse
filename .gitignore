@@ -37,7 +37,7 @@ Thumbs.db
 .idea/
 *.swp
 
-# Claude Code — ignore local session/config but keep shared skills
+# Claude Code — ignore local session/config but keep shared commands and skills
 .claude/settings.local.json
 .claude/settings.json
 
