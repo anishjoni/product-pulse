@@ -51,32 +51,31 @@ def collect_google_play(app_id: str, count: int = 2000) -> list[dict]:
 
 def collect_app_store(app_id: str, country: str = "ca", count: int = 2000) -> list[dict]:
     try:
-        from app_store_scraper import AppStore
+        from app_store_web_scraper import AppStoreEntry
     except ImportError:
-        logger.error("app-store-scraper not installed — run: uv sync")
+        logger.error("app-store-web-scraper not installed — run: uv sync")
         return []
 
     logger.info(f"Collecting App Store reviews for app_id={app_id}")
     records = []
     try:
-        app = AppStore(country=country, app_name="wealthsimple", app_id=app_id)
-        app.review(how_many=count)
+        app = AppStoreEntry(app_id=app_id, country=country)
 
-        for r in app.reviews:
+        for r in app.reviews(limit=count):
             records.append(
                 {
-                    "id": f"appstore_{r.get('id', hash(r.get('review', '')))}",
+                    "id": f"appstore_{r.id}",
                     "source": "app_store",
                     "subreddit": None,
                     "type": "review",
-                    "title": r.get("title", ""),
-                    "text": r.get("review", ""),
+                    "title": r.title or "",
+                    "text": r.content or "",
                     "url": f"https://apps.apple.com/{country}/app/id{app_id}",
                     "score": 0,
                     "num_comments": 0,
-                    "rating": float(r["rating"]) if r.get("rating") else None,
-                    "created_utc": r["date"].isoformat() if r.get("date") else None,
-                    "author": r.get("userName", "anonymous"),
+                    "rating": float(r.rating) if r.rating is not None else None,
+                    "created_utc": r.date.isoformat() if r.date else None,
+                    "author": r.user_name or "anonymous",
                 }
             )
     except Exception as e:

@@ -7,7 +7,7 @@ dependencies = [
     # Data collection
     "praw>=7.7.1",
     "google-play-scraper>=1.2.4",
-    "app-store-scraper>=0.3.5",
+    "app-store-web-scraper>=0.2.0",
     # Data processing
     "polars>=0.20.0",
     "pandas>=2.0.0",
