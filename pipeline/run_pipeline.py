@@ -20,8 +20,8 @@ def run_step(step: str) -> None:
 
     match step:
         case "collect":
-            from pipeline.collect_reddit import run as collect_reddit
             from pipeline.collect_appstore import run as collect_appstore
+            from pipeline.collect_reddit import run as collect_reddit
             collect_reddit()
             collect_appstore()
         case "preprocess":

@@ -359,7 +359,7 @@ def _demo_insights() -> list[dict]:
             "category": "friction",
             "confidence": "high",
             "summary": (
-                "Users frequently hit deposit limits ($250–$1,500) and find the process "
+                "Users frequently hit deposit limits ($250-$1,500) and find the process "
                 "for increasing them opaque. Many compare unfavorably to competitors offering "
                 "higher limits or instant bank verification via Plaid."
             ),

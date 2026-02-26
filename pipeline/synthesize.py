@@ -179,7 +179,7 @@ def run() -> list[dict]:
     summary_path = PROCESSED_DIR / "topic_summary.csv"
     if summary_path.exists():
         ts = pl.read_csv(summary_path)
-        topic_words_map = dict(zip(ts["topic_id"].to_list(), ts["top_words"].to_list()))
+        topic_words_map = dict(zip(ts["topic_id"].to_list(), ts["top_words"].to_list(), strict=False))
 
     # Topics to process
     topic_counts = (
