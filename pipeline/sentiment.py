@@ -20,7 +20,7 @@ def load_data() -> pl.DataFrame:
         path = PROCESSED_DIR / filename
         if path.exists():
             logger.info(f"Loading {path.name}")
-            return pl.read_ndjson(path)
+            return pl.read_ndjson(path, infer_schema_length=None)
     raise FileNotFoundError("Run preprocess.py first.")
 
 

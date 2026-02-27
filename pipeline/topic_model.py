@@ -32,7 +32,7 @@ def load_processed() -> pl.DataFrame:
     path = PROCESSED_DIR / "cleaned.ndjson"
     if not path.exists():
         raise FileNotFoundError(f"Run preprocess.py first. Missing: {path}")
-    return _cast_null_cols(pl.read_ndjson(path))
+    return pl.read_ndjson(path, infer_schema_length=None)
 
 
 def build_topic_model(docs: list[str]) -> tuple[BERTopic, list[int], np.ndarray]:

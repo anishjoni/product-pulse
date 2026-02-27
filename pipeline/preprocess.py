@@ -144,25 +144,25 @@ def run() -> pl.DataFrame:
     ).with_columns(pl.col("created_utc").dt.strftime("%Y-%m").alias("year_month"))
 
     # 8. Select final columns
-    keep = [
-        "id",
-        "source",
-        "subreddit",
-        "type",
-        "full_text",
-        "title",
-        "url",
-        "score",
-        "num_comments",
-        "rating",
-        "created_utc",
-        "year_month",
-        "author",
-    ]
-    for col in keep:
+    keep_schema: dict[str, pl.DataType] = {
+        "id": pl.String,
+        "source": pl.String,
+        "subreddit": pl.String,
+        "type": pl.String,
+        "full_text": pl.String,
+        "title": pl.String,
+        "url": pl.String,
+        "score": pl.Int64,
+        "num_comments": pl.Int64,
+        "rating": pl.Float64,
+        "created_utc": pl.Datetime,
+        "year_month": pl.String,
+        "author": pl.String,
+    }
+    for col, dtype in keep_schema.items():
         if col not in df.columns:
-            df = df.with_columns(pl.lit(None).alias(col))
-    df = df.select(keep)
+            df = df.with_columns(pl.lit(None, dtype=dtype).alias(col))
+    df = df.select(list(keep_schema))
 
     # 9. Save
     output_path = PROCESSED_DIR / "cleaned.ndjson"

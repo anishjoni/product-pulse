@@ -1,36 +1,62 @@
 """
-LLM Synthesis Layer — Google Gemini API (free tier).
+LLM Synthesis Layer — Ollama (local models).
 Reads top posts per topic cluster and generates structured insight cards.
 
-Free tier limits: 1,500 requests/day, 1M tokens/min (gemini-2.0-flash)
-Get a free API key at: https://aistudio.google.com → "Get API key"
+Requires Ollama running locally with a model pulled, e.g.:
+    ollama pull qwen3-coder:30b
 
 Usage:
     uv run python pipeline/synthesize.py
-
-Requires GEMINI_API_KEY in .env
 """
 
 import json
+import re
 import time
 from collections import Counter
 
+import ollama
 import polars as pl
-from google import genai
-from google.genai import types
 
 from pipeline.config import (
-    GEMINI_MODEL,
     INSIGHTS_DIR,
     PROCESSED_DIR,
     logger,
-    require_env,
 )
 
 MAX_POSTS_PER_TOPIC = 10
 MIN_TOPIC_SIZE = 5
 MAX_TOPICS = 30
-DELAY_BETWEEN_CALLS = 0.5  # Gemini free tier is generous; 0.5s is safe
+
+OLLAMA_MODEL = "qwen3-coder:30b"
+
+
+def _ollama_host() -> str:
+    """Detect Ollama host: try localhost first, fall back to WSL2 Windows gateway."""
+    import subprocess
+
+    import httpx
+
+    for host in ["http://localhost:11434"]:
+        try:
+            httpx.get(f"{host}/api/tags", timeout=2)
+            return host
+        except Exception:
+            pass
+    # WSL2: Windows host is the default gateway
+    try:
+        result = subprocess.run(
+            ["ip", "route"], capture_output=True, text=True, timeout=3
+        )
+        for line in result.stdout.splitlines():
+            if "default" in line:
+                gw = line.split()[2]
+                return f"http://{gw}:11434"
+    except Exception:
+        pass
+    return "http://localhost:11434"
+
+
+OLLAMA_HOST = _ollama_host()
 
 SYSTEM_PROMPT = """You are a senior product intelligence analyst at Wealthsimple.
 Your job is to read a cluster of user feedback posts and synthesize them into a structured insight card
@@ -40,7 +66,8 @@ You understand the Canadian financial context: TFSAs, RRSPs, FHSAs, CRA rules, a
 landscape (Questrade, RBC Direct Investing, etc.).
 
 Always be specific, grounded in the actual feedback, and honest about uncertainty.
-Never invent features or problems not mentioned in the data."""
+Never invent features or problems not mentioned in the data.
+Respond with ONLY valid JSON — no markdown fences, no commentary, no thinking."""
 
 
 def build_prompt(topic_id: int, topic_words: str, posts: list[dict]) -> str:
@@ -75,8 +102,13 @@ Generate a structured insight card in the following JSON format (respond with ON
 }}"""
 
 
+def strip_thinking(text: str) -> str:
+    """Remove <think>...</think> blocks emitted by reasoning models like qwen3."""
+    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+
+
 def synthesize_topic(
-    client: genai.Client,
+    client: ollama.Client,
     topic_id: int,
     topic_words: str,
     posts: list[dict],
@@ -86,18 +118,18 @@ def synthesize_topic(
 
     for attempt in range(retries + 1):
         try:
-            response = client.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    max_output_tokens=1024,
-                    temperature=0.3,  # lower = more consistent JSON
-                ),
+            response = client.chat(
+                model=OLLAMA_MODEL,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                options={"temperature": 0.3},
             )
-            raw = response.text.strip()
+            raw = response.message.content.strip()
+            raw = strip_thinking(raw)
 
-            # Strip markdown code fences if model adds them despite instructions
+            # Strip markdown code fences if model adds them
             if raw.startswith("```"):
                 raw = raw.split("```")[1]
                 if raw.startswith("json"):
@@ -115,13 +147,10 @@ def synthesize_topic(
             if attempt == retries:
                 return None
         except Exception as e:
-            err = str(e)
-            if "429" in err or "quota" in err.lower():
-                wait = 60
-                logger.warning(f"Rate limited — waiting {wait}s")
-                time.sleep(wait)
+            logger.error(f"Topic {topic_id} attempt {attempt + 1}: {e}")
+            if attempt < retries:
+                time.sleep(2)
             else:
-                logger.error(f"Topic {topic_id}: API error: {e}")
                 return None
 
     return None
@@ -159,15 +188,26 @@ def get_representative_posts(
 
 
 def run() -> list[dict]:
-    api_key = require_env("GEMINI_API_KEY")
-    client = genai.Client(api_key=api_key)
+    client = ollama.Client(host=OLLAMA_HOST)
+
+    # Verify model is available
+    try:
+        models = [m.model for m in client.list().models]
+        if OLLAMA_MODEL not in models:
+            available = ", ".join(models)
+            logger.error(f"Model '{OLLAMA_MODEL}' not found. Available: {available}")
+            return []
+        logger.info(f"Using local model: {OLLAMA_MODEL}")
+    except Exception as e:
+        logger.error(f"Cannot connect to Ollama at {OLLAMA_HOST}: {e}")
+        return []
 
     # Load data (prefer most-enriched available)
     for filename in ["with_sentiment.ndjson", "with_topics.ndjson", "cleaned.ndjson"]:
         path = PROCESSED_DIR / filename
         if path.exists():
             logger.info(f"Loading {path.name}")
-            df = pl.read_ndjson(path)
+            df = pl.read_ndjson(path, infer_schema_length=None)
             break
     else:
         raise FileNotFoundError("Run preprocess.py first.")
@@ -195,8 +235,9 @@ def run() -> list[dict]:
         .head(MAX_TOPICS)
     )
     topics = topic_counts["topic_id"].to_list()
-    logger.info(f"Synthesizing {len(topics)} topics via Gemini ({GEMINI_MODEL})...")
+    logger.info(f"Synthesizing {len(topics)} topics via {OLLAMA_MODEL}...")
 
+    output_path = INSIGHTS_DIR / "insights.json"
     insights = []
     for i, topic_id in enumerate(topics, 1):
         topic_words = topic_words_map.get(topic_id, "")
@@ -208,12 +249,13 @@ def run() -> list[dict]:
         insight = synthesize_topic(client, topic_id, topic_words, posts)
         if insight:
             insights.append(insight)
+            # Save after each card so progress survives interruption
+            with open(output_path, "w") as f:
+                json.dump(insights, f, indent=2, default=str)
+            logger.success(f"  → saved card {len(insights)} ({insight.get('category', '?')}): {insight.get('headline', '')[:60]}")
+        else:
+            logger.warning(f"  → failed to generate card for topic {topic_id}")
 
-        time.sleep(DELAY_BETWEEN_CALLS)
-
-    output_path = INSIGHTS_DIR / "insights.json"
-    with open(output_path, "w") as f:
-        json.dump(insights, f, indent=2, default=str)
     logger.success(f"Saved {len(insights)} insight cards → {output_path}")
 
     print(f"\nGenerated {len(insights)} insight cards")
