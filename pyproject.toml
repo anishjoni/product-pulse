@@ -26,6 +26,9 @@ dependencies = [
     # Dashboard
     "streamlit>=1.28.0",
     "plotly>=5.17.0",
+    # API backend
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
     # Utilities
     "python-dotenv>=1.0.0",
     "tqdm>=4.66.0",
@@ -91,4 +94,5 @@ dev = [
     "ruff>=0.3.0",
     "pytest>=8.0.0",
     "pytest-mock>=3.12.0",
+    "httpx>=0.27.0",
 ]
