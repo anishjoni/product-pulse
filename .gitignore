@@ -21,9 +21,11 @@ dist/
 build/
 
 # Virtual environments
+.venv/
 .venv_s/
 .venv-win/
 .venv-wsl/
+~/
 venv/
 env/
 
@@ -42,6 +44,12 @@ Thumbs.db
 # Claude Code — ignore local session/config but keep shared commands and skills
 .claude/settings.local.json
 .claude/settings.json
+.claude/.claude/
+
+# Tool/workflow files
+.sidecar/
+.todos/
+.workmux.yaml
 
 # Jupyter
 .ipynb_checkpoints/
