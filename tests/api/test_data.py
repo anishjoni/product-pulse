@@ -60,7 +60,11 @@ def test_load_review_log_maps_fields(tmp_data_dir):
 
 
 def test_save_review(tmp_data_dir):
-    save_review("1", ReviewUpdate(status="dismissed", note="out of scope"), tmp_data_dir)
+    returned = save_review("1", ReviewUpdate(status="dismissed", note="out of scope"), tmp_data_dir)
+    assert returned.insight_id == "1"
+    assert returned.status == "dismissed"
+    assert returned.note == "out of scope"
+    # Also verify it was persisted
     reviews = load_review_log(tmp_data_dir)
     r = next(r for r in reviews if r.insight_id == "1")
     assert r.status == "dismissed"
