@@ -11,10 +11,10 @@ import Chart from 'primevue/chart'
 import type { Insight } from '@/types'
 
 const CATEGORY_COLORS: Record<string, string> = {
-  roadmap:  '#2563EB',
+  roadmap:  '#3B82F6',
   friction: '#EF4444',
-  win:      '#059669',
-  other:    '#6B7280',
+  win:      '#00C4A0',
+  other:    '#94A3B8',
 }
 
 const props = defineProps<{ insights: Insight[] }>()
@@ -23,7 +23,7 @@ const chartData = computed(() => ({
   labels: props.insights.map(i => i.headline.length > 42 ? i.headline.slice(0, 42) + '…' : i.headline),
   datasets: [{
     data: props.insights.map(i => i.post_count),
-    backgroundColor: props.insights.map(i => CATEGORY_COLORS[i.category] ?? '#6B7280'),
+    backgroundColor: props.insights.map(i => CATEGORY_COLORS[i.category] ?? '#94A3B8'),
     borderRadius: 6,
   }],
 }))
@@ -34,8 +34,8 @@ const chartOptions = {
   maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
-    x: { grid: { color: '#E5E7EB' }, ticks: { color: '#6B7280' } },
-    y: { grid: { display: false }, ticks: { color: '#1A1A1A', font: { size: 12 } } },
+    x: { grid: { color: '#F1F3F6' }, ticks: { color: '#94A3B8', font: { size: 11 } } },
+    y: { grid: { display: false }, ticks: { color: '#374151', font: { size: 12 } } },
   },
 }
 </script>
@@ -44,14 +44,20 @@ const chartOptions = {
 .chart-card {
   background: var(--p-surface-0);
   border: 1px solid var(--p-surface-200);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.5rem;
+  transition: box-shadow 150ms ease;
+}
+.chart-card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 .chart-title {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--p-surface-900);
+  color: var(--p-surface-700);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   margin: 0 0 1rem;
 }
 </style>
