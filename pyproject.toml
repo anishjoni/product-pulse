@@ -35,6 +35,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "tqdm>=4.66.0",
     "loguru>=0.7.2",
+    "aiofiles>=25.1.0",
 ]
 
 [project.optional-dependencies]
