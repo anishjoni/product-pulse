@@ -29,10 +29,13 @@ dependencies = [
     # API backend
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.29.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
     # Utilities
     "python-dotenv>=1.0.0",
     "tqdm>=4.66.0",
     "loguru>=0.7.2",
+    "aiofiles>=25.1.0",
 ]
 
 [project.optional-dependencies]

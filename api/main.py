@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from api.routers import insights, reviews, stats
 
@@ -15,3 +18,8 @@ app.add_middleware(
 app.include_router(stats.router)
 app.include_router(insights.router)
 app.include_router(reviews.router)
+
+# Serve Vue SPA in production (only if built)
+_dist = Path(__file__).parent.parent / "frontend" / "dist"
+if _dist.exists():
+    app.mount("/", StaticFiles(directory=_dist, html=True), name="spa")
