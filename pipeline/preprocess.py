@@ -57,7 +57,24 @@ def load_raw() -> pl.DataFrame:
     if not frames:
         raise FileNotFoundError(f"No .ndjson files found in {RAW_DIR}. Run collect_*.py first.")
 
-    df = pl.concat(frames, how="diagonal")
+    # Resolve type conflicts: for each column, pick the first non-Null dtype across all frames
+    # and cast any frame that has Null for that column to the resolved type.
+    resolved: dict[str, pl.DataType] = {}
+    for frame in frames:
+        for col, dtype in zip(frame.columns, frame.dtypes, strict=False):
+            if dtype != pl.Null and col not in resolved:
+                resolved[col] = dtype
+
+    fixed = []
+    for frame in frames:
+        casts = [
+            pl.lit(None, dtype=resolved[c]).alias(c)
+            for c, t in zip(frame.columns, frame.dtypes, strict=False)
+            if t == pl.Null and c in resolved
+        ]
+        fixed.append(frame.with_columns(casts) if casts else frame)
+
+    df = pl.concat(fixed, how="diagonal")
     logger.info(f"Loaded {len(df):,} total records from {len(frames)} files")
     return df
 
@@ -124,13 +141,24 @@ def run() -> pl.DataFrame:
     # 7. Parse dates + add year_month
     df = df.with_columns(
         pl.col("created_utc").cast(pl.Utf8).str.to_datetime(strict=False).alias("created_utc")
-    ).with_columns(
-        pl.col("created_utc").dt.strftime("%Y-%m").alias("year_month")
-    )
+    ).with_columns(pl.col("created_utc").dt.strftime("%Y-%m").alias("year_month"))
 
     # 8. Select final columns
-    keep = ["id", "source", "subreddit", "type", "full_text", "title",
-            "url", "score", "num_comments", "rating", "created_utc", "year_month", "author"]
+    keep = [
+        "id",
+        "source",
+        "subreddit",
+        "type",
+        "full_text",
+        "title",
+        "url",
+        "score",
+        "num_comments",
+        "rating",
+        "created_utc",
+        "year_month",
+        "author",
+    ]
     for col in keep:
         if col not in df.columns:
             df = df.with_columns(pl.lit(None).alias(col))

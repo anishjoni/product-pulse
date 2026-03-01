@@ -24,11 +24,11 @@ st.set_page_config(
 # ── Color palette (fintech-grade, accessible) ─────────────────────────────────
 # Inspired by Coolors "Professional Tech" and "Trust & Growth" palettes
 COLORS = {
-    "roadmap": "#2563EB",   # deep blue — opportunity, forward-looking
+    "roadmap": "#2563EB",  # deep blue — opportunity, forward-looking
     "friction": "#EF4444",  # clear red — pain points
-    "win": "#059669",       # teal-green — success, positive
-    "other": "#6B7280",     # cool gray — neutral
-    "bg": "#F9FAFB",        # off-white background
+    "win": "#059669",  # teal-green — success, positive
+    "other": "#6B7280",  # cool gray — neutral
+    "bg": "#F9FAFB",  # off-white background
     "surface": "#FFFFFF",
     "border": "#E5E7EB",
     "text": "#111827",
@@ -38,8 +38,8 @@ COLORS = {
 CATEGORY_META = {
     "roadmap": {"icon": "🗺️", "color": COLORS["roadmap"], "label": "Roadmap Opportunity"},
     "friction": {"icon": "🔥", "color": COLORS["friction"], "label": "Friction / Pain Point"},
-    "win":      {"icon": "🏆", "color": COLORS["win"],     "label": "Win"},
-    "other":    {"icon": "📌", "color": COLORS["other"],   "label": "Other"},
+    "win": {"icon": "🏆", "color": COLORS["win"], "label": "Win"},
+    "other": {"icon": "📌", "color": COLORS["other"], "label": "Other"},
 }
 
 STATUS_OPTIONS = [
@@ -114,7 +114,10 @@ def render_overview(insights: list[dict], review_log: dict) -> None:
             x=[i.get("n_posts", 0) for i in sorted_insights],
             y=labels,
             orientation="h",
-            marker_color=[CATEGORY_META.get(i.get("category", "other"), {}).get("color", COLORS["other"]) for i in sorted_insights],
+            marker_color=[
+                CATEGORY_META.get(i.get("category", "other"), {}).get("color", COLORS["other"])
+                for i in sorted_insights
+            ],
             hovertemplate="%{y}<br>%{x} posts<extra></extra>",
         )
     )
@@ -338,8 +341,8 @@ def _demo_insights() -> list[dict]:
                 "doesn't update room in real-time from CRA data. Several report receiving CRA penalty letters."
             ),
             "evidence": (
-                "\"I had no idea I was over-contributing — WS showed my balance but not my actual room. "
-                "Got an $800 penalty.\" | \"Why can't WS just show my available TFSA room like my bank does?\""
+                '"I had no idea I was over-contributing — WS showed my balance but not my actual room. '
+                'Got an $800 penalty." | "Why can\'t WS just show my available TFSA room like my bank does?"'
             ),
             "product_action": (
                 "Add a TFSA contribution room tracker in account overview. "
@@ -359,12 +362,12 @@ def _demo_insights() -> list[dict]:
             "category": "friction",
             "confidence": "high",
             "summary": (
-                "Users frequently hit deposit limits ($250–$1,500) and find the process "
+                "Users frequently hit deposit limits ($250-$1,500) and find the process "
                 "for increasing them opaque. Many compare unfavorably to competitors offering "
                 "higher limits or instant bank verification via Plaid."
             ),
             "evidence": (
-                "\"Transferred $5k to buy during the dip, only $250 was instant. Missed the window.\" | "
+                '"Transferred $5k to buy during the dip, only $250 was instant. Missed the window." | '
                 "\"Questrade increased my limit after one call. WS support said 'review in 30 days'.\""
             ),
             "product_action": (
@@ -390,8 +393,8 @@ def _demo_insights() -> list[dict]:
                 "High retention signal."
             ),
             "evidence": (
-                "\"The round-up feature made me an investor without realizing it.\" | "
-                "\"Auto-invest into my TFSA every payday — completely hands off. Love it.\""
+                '"The round-up feature made me an investor without realizing it." | '
+                '"Auto-invest into my TFSA every payday — completely hands off. Love it."'
             ),
             "product_action": (
                 "Extend round-ups to RRSP and FHSA accounts. "
@@ -416,8 +419,8 @@ def _demo_insights() -> list[dict]:
                 "Canadian stocks like Shopify."
             ),
             "evidence": (
-                "\"WS has fractional for US stocks but not Canadian? Shopify is $90 — I want to buy $50 worth.\" | "
-                "\"Fractional CAD stocks would make Wealthsimple perfect for small investors.\""
+                '"WS has fractional for US stocks but not Canadian? Shopify is $90 — I want to buy $50 worth." | '
+                '"Fractional CAD stocks would make Wealthsimple perfect for small investors."'
             ),
             "product_action": (
                 "Explore extending fractional share infrastructure to TSX-listed securities. "
@@ -441,8 +444,8 @@ def _demo_insights() -> list[dict]:
                 "and high-volatility events. Users lose confidence and miss trades — this directly costs money."
             ),
             "evidence": (
-                "\"App froze for 20 minutes at open on a volatile day. Couldn't execute my stop-loss.\" | "
-                "\"1-star because the app crashes every time there's big news.\""
+                '"App froze for 20 minutes at open on a volatile day. Couldn\'t execute my stop-loss." | '
+                '"1-star because the app crashes every time there\'s big news."'
             ),
             "product_action": (
                 "Prioritize load testing at market open. Add a public status page and in-app incident banner. "
@@ -466,8 +469,8 @@ def _demo_insights() -> list[dict]:
                 "being first to market, and many opened accounts specifically for this feature."
             ),
             "evidence": (
-                "\"Opened my WS account just for the FHSA. Finally a broker that moves fast.\" | "
-                "\"FHSA on WS is seamless — my bank took 3 months and buried it in a phone call.\""
+                '"Opened my WS account just for the FHSA. Finally a broker that moves fast." | '
+                '"FHSA on WS is seamless — my bank took 3 months and buried it in a phone call."'
             ),
             "product_action": (
                 "Use FHSA as an acquisition funnel. Build FHSA education content and "

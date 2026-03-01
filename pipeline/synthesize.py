@@ -45,7 +45,7 @@ Never invent features or problems not mentioned in the data."""
 
 def build_prompt(topic_id: int, topic_words: str, posts: list[dict]) -> str:
     posts_text = "\n\n".join(
-        f"[{i+1}] Source: {p.get('source')} | "
+        f"[{i + 1}] Source: {p.get('source')} | "
         f"Score/Rating: {p.get('score') or p.get('rating', 'N/A')} | "
         f"Date: {str(p.get('created_utc', ''))[:10]}\n{str(p['full_text'])[:800]}"
         for i, p in enumerate(posts)
@@ -111,7 +111,7 @@ def synthesize_topic(
             return insight
 
         except json.JSONDecodeError as e:
-            logger.warning(f"Topic {topic_id} attempt {attempt+1}: JSON parse error: {e}")
+            logger.warning(f"Topic {topic_id} attempt {attempt + 1}: JSON parse error: {e}")
             if attempt == retries:
                 return None
         except Exception as e:
@@ -127,7 +127,9 @@ def synthesize_topic(
     return None
 
 
-def get_representative_posts(df: pl.DataFrame, topic_id: int, n: int = MAX_POSTS_PER_TOPIC) -> list[dict]:
+def get_representative_posts(
+    df: pl.DataFrame, topic_id: int, n: int = MAX_POSTS_PER_TOPIC
+) -> list[dict]:
     topic_df = df.filter(pl.col("topic_id") == topic_id)
     if topic_df.is_empty():
         return []
@@ -179,7 +181,9 @@ def run() -> list[dict]:
     summary_path = PROCESSED_DIR / "topic_summary.csv"
     if summary_path.exists():
         ts = pl.read_csv(summary_path)
-        topic_words_map = dict(zip(ts["topic_id"].to_list(), ts["top_words"].to_list()))
+        topic_words_map = dict(
+            zip(ts["topic_id"].to_list(), ts["top_words"].to_list(), strict=False)
+        )
 
     # Topics to process
     topic_counts = (

@@ -20,11 +20,19 @@ MIN_TOPIC_SIZE = 10
 N_GRAM_RANGE = (1, 2)
 
 
+def _cast_null_cols(df: pl.DataFrame) -> pl.DataFrame:
+    """Cast any Null-typed columns to String so ndjson writes don't fail."""
+    null_cols = [c for c, t in zip(df.columns, df.dtypes, strict=False) if t == pl.Null]
+    if null_cols:
+        df = df.with_columns([pl.lit(None, dtype=pl.String).alias(c) for c in null_cols])
+    return df
+
+
 def load_processed() -> pl.DataFrame:
     path = PROCESSED_DIR / "cleaned.ndjson"
     if not path.exists():
         raise FileNotFoundError(f"Run preprocess.py first. Missing: {path}")
-    return pl.read_ndjson(path)
+    return _cast_null_cols(pl.read_ndjson(path))
 
 
 def build_topic_model(docs: list[str]) -> tuple[BERTopic, list[int], np.ndarray]:
@@ -40,9 +48,7 @@ def build_topic_model(docs: list[str]) -> tuple[BERTopic, list[int], np.ndarray]
         cluster_selection_method="eom",
         prediction_data=True,
     )
-    vectorizer_model = CountVectorizer(
-        ngram_range=N_GRAM_RANGE, stop_words="english", min_df=2
-    )
+    vectorizer_model = CountVectorizer(ngram_range=N_GRAM_RANGE, stop_words="english", min_df=2)
 
     model = BERTopic(
         embedding_model=embedding_model,
@@ -63,7 +69,18 @@ def build_topic_model(docs: list[str]) -> tuple[BERTopic, list[int], np.ndarray]
 def assign_intent(topic_words: str) -> str:
     """Heuristic intent tagging — Claude refines this in synthesize.py."""
     t = topic_words.lower()
-    friction = ["error", "bug", "broken", "crash", "slow", "issue", "fail", "fee", "wait", "support"]
+    friction = [
+        "error",
+        "bug",
+        "broken",
+        "crash",
+        "slow",
+        "issue",
+        "fail",
+        "fee",
+        "wait",
+        "support",
+    ]
     roadmap = ["want", "wish", "need", "request", "add", "should", "missing", "improve", "option"]
     win = ["love", "great", "amazing", "best", "awesome", "easy", "recommend", "perfect", "like"]
 
@@ -88,7 +105,7 @@ def run() -> tuple[pl.DataFrame, BERTopic]:
         pl.Series("topic_id", topics),
         pl.Series("topic_prob", topic_probs),
     )
-    df.write_ndjson(PROCESSED_DIR / "with_topics.ndjson")
+    _cast_null_cols(df).write_ndjson(PROCESSED_DIR / "with_topics.ndjson")
     logger.info("Saved → data/processed/with_topics.ndjson")
 
     # Topic summary
@@ -99,12 +116,14 @@ def run() -> tuple[pl.DataFrame, BERTopic]:
         if tid == -1:
             continue
         top_words = ", ".join(w for w, _ in model.get_topic(tid)[:8])
-        topic_rows.append({
-            "topic_id": tid,
-            "count": int(row["Count"]),
-            "top_words": top_words,
-            "intent": assign_intent(top_words),
-        })
+        topic_rows.append(
+            {
+                "topic_id": tid,
+                "count": int(row["Count"]),
+                "top_words": top_words,
+                "intent": assign_intent(top_words),
+            }
+        )
 
     summary = pl.DataFrame(topic_rows).sort("count", descending=True)
     summary.write_csv(PROCESSED_DIR / "topic_summary.csv")

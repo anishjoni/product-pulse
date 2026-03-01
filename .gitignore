@@ -21,7 +21,9 @@ dist/
 build/
 
 # Virtual environments
-.venv/
+.venv_s/
+.venv-win/
+.venv-wsl/
 venv/
 env/
 
@@ -37,7 +39,7 @@ Thumbs.db
 .idea/
 *.swp
 
-# Claude Code — ignore local session/config but keep shared skills
+# Claude Code — ignore local session/config but keep shared commands and skills
 .claude/settings.local.json
 .claude/settings.json
 
