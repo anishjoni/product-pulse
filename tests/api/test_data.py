@@ -1,11 +1,9 @@
 import json
-from pathlib import Path
 
 import pytest
 
 from api.data import load_insights, load_review_log, save_review
 from api.models import ReviewUpdate
-
 
 SAMPLE_INSIGHTS = [
     {

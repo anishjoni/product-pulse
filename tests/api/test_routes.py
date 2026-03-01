@@ -1,4 +1,5 @@
 import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -10,28 +11,46 @@ def client(tmp_path, monkeypatch):
 
     demo = [
         {
-            "topic_id": 1, "headline": "TFSA confusion", "category": "friction",
-            "confidence": "high", "summary": "Users confused.",
+            "topic_id": 1,
+            "headline": "TFSA confusion",
+            "category": "friction",
+            "confidence": "high",
+            "summary": "Users confused.",
             "evidence": '"quote one" | "quote two"',
-            "product_action": "Add calculator", "volume_signal": "47 posts",
-            "needs_human_review": True, "review_reason": "CRA risk",
-            "canadian_context": None, "n_posts": 47, "top_words": "tfsa", "status": "pending",
+            "product_action": "Add calculator",
+            "volume_signal": "47 posts",
+            "needs_human_review": True,
+            "review_reason": "CRA risk",
+            "canadian_context": None,
+            "n_posts": 47,
+            "top_words": "tfsa",
+            "status": "pending",
         },
         {
-            "topic_id": 2, "headline": "Round-ups loved", "category": "win",
-            "confidence": "high", "summary": "Users love round-ups.",
+            "topic_id": 2,
+            "headline": "Round-ups loved",
+            "category": "win",
+            "confidence": "high",
+            "summary": "Users love round-ups.",
             "evidence": '"great feature"',
-            "product_action": "Extend to RRSP", "volume_signal": "89 posts",
-            "needs_human_review": False, "review_reason": None,
-            "canadian_context": None, "n_posts": 89, "top_words": "round", "status": "pending",
+            "product_action": "Extend to RRSP",
+            "volume_signal": "89 posts",
+            "needs_human_review": False,
+            "review_reason": None,
+            "canadian_context": None,
+            "n_posts": 89,
+            "top_words": "round",
+            "status": "pending",
         },
     ]
     (insights_dir / "insights.json").write_text(json.dumps(demo))
 
     import api.data as data_module
+
     monkeypatch.setattr(data_module, "DEFAULT_DATA_DIR", insights_dir)
 
     from api.main import app
+
     return TestClient(app)
 
 
