@@ -31,6 +31,8 @@ SEED_PRODUCT = {
         {"type": "reddit", "ref": "CanadianInvestor"},
         {"type": "youtube", "ref": "wealthsimple trade review"},
         {"type": "youtube", "ref": "wealthsimple trade tutorial"},
+        {"type": "google_play", "ref": "com.wealthsimple.trade:ca"},
+        {"type": "apple_app_store", "ref": "1403491709:ca"},
     ],
 }
 
@@ -54,47 +56,59 @@ SEED_PRODUCT_XBOX = {
         {"type": "reddit", "ref": "gaming"},
         {"type": "youtube", "ref": "xbox new ceo 2025"},
         {"type": "youtube", "ref": "xbox game pass 2025"},
+        {"type": "google_play", "ref": "com.microsoft.xboxone.smartglass:us"},
+        {"type": "apple_app_store", "ref": "736179781:us"},
     ],
 }
 
 
 def _insert_product(conn, product: dict) -> None:
-    """Insert a single product with its keywords and sources if it does not exist."""
+    """Insert a single product with its keywords and sources if it does not exist.
+
+    Source seeding always runs with an existence check so new sources can be
+    added to an already-seeded product without duplicating existing rows.
+    """
     slug = product["slug"]
 
-    # Idempotency check — skip if slug already present
     row = conn.execute(
         "SELECT id FROM products WHERE slug = ?", (slug,)
     ).fetchone()
-    if row is not None:
-        print(f"  Skipping '{slug}' — already exists.")
-        return
 
-    cursor = conn.execute(
-        """
-        INSERT INTO products (name, slug, description)
-        VALUES (?, ?, ?)
-        """,
-        (product["name"], slug, product.get("description")),
-    )
-    product_id = cursor.lastrowid
-
-    for keyword in product["keywords"]:
-        conn.execute(
-            "INSERT INTO product_keywords (product_id, keyword) VALUES (?, ?)",
-            (product_id, keyword),
-        )
-
-    for source in product["sources"]:
-        conn.execute(
+    if row is None:
+        cursor = conn.execute(
             """
-            INSERT INTO product_sources (product_id, source_type, source_ref)
+            INSERT INTO products (name, slug, description)
             VALUES (?, ?, ?)
             """,
-            (product_id, source["type"], source["ref"]),
+            (product["name"], slug, product.get("description")),
         )
+        product_id = cursor.lastrowid
 
-    print(f"  Inserted '{slug}'.")
+        for keyword in product["keywords"]:
+            conn.execute(
+                "INSERT INTO product_keywords (product_id, keyword) VALUES (?, ?)",
+                (product_id, keyword),
+            )
+        print(f"  Inserted '{slug}'.")
+    else:
+        product_id = row[0]
+        print(f"  Product '{slug}' already exists (id={product_id}), checking sources…")
+
+    # Always seed sources — skip any that already exist
+    for source in product["sources"]:
+        existing = conn.execute(
+            "SELECT id FROM product_sources WHERE product_id=? AND source_type=? AND source_ref=?",
+            (product_id, source["type"], source["ref"]),
+        ).fetchone()
+        if existing is None:
+            conn.execute(
+                """
+                INSERT INTO product_sources (product_id, source_type, source_ref)
+                VALUES (?, ?, ?)
+                """,
+                (product_id, source["type"], source["ref"]),
+            )
+            print(f"    + Added source {source['type']}:{source['ref']}")
 
 
 def seed() -> None:

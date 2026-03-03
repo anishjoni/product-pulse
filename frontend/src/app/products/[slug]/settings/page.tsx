@@ -137,11 +137,18 @@ export default function SettingsPage({ params }: { params: { slug: string } }) {
             >
               <option value="reddit">Reddit</option>
               <option value="youtube">YouTube</option>
+              <option value="google_play">Google Play</option>
+              <option value="apple_app_store">App Store</option>
             </select>
             <Input
               value={newSourceRef}
               onChange={(e) => setNewSourceRef(e.target.value)}
-              placeholder="subreddit or search term…"
+              placeholder={
+                newSourceType === "reddit" ? "subreddit name (e.g. wealthsimple)" :
+                newSourceType === "youtube" ? "search term (e.g. wealthsimple review)" :
+                newSourceType === "google_play" ? "com.example.app:ca" :
+                "1234567890:us"
+              }
               onKeyDown={(e) => e.key === "Enter" && addSource()}
             />
             <Button variant="outline" onClick={addSource}>

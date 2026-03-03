@@ -54,20 +54,39 @@ if runs:
 else:
     print("  No scout runs found.")
 
-# ── Source breakdown ──────────────────────────────────────────────────────────
+# ── Configured sources per product ────────────────────────────────────────────
+print("\n── Configured sources per product ───────────────")
+with get_db() as conn:
+    rows = conn.execute(
+        """
+        SELECT p.name, ps.source_type, ps.source_ref, ps.is_enabled
+        FROM product_sources ps
+        JOIN products p ON p.id = ps.product_id
+        ORDER BY p.name, ps.source_type, ps.source_ref
+        """
+    ).fetchall()
+    current_product = None
+    for r in rows:
+        if r['name'] != current_product:
+            current_product = r['name']
+            print(f"\n  {current_product}")
+        enabled = "✅" if r['is_enabled'] else "⏸ "
+        print(f"    {enabled} {r['source_type']:18s} {r['source_ref']}")
+
+# ── Raw feedback by source ─────────────────────────────────────────────────────
 print("\n── Raw feedback by source ───────────────────────")
 with get_db() as conn:
     rows = conn.execute(
         "SELECT source, COUNT(*) as n FROM raw_feedback GROUP BY source ORDER BY n DESC"
     ).fetchall()
     for r in rows:
-        print(f"  {r['source']:12s}: {r['n']} posts")
+        print(f"  {r['source']:18s}: {r['n']} posts")
 
 # ── Ollama ────────────────────────────────────────────────────────────────────
 print("\n── Ollama ───────────────────────────────────────")
 import httpx
 base = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-model = os.environ.get("OLLAMA_MODEL", "llama3")
+model = os.environ.get("OLLAMA_MODEL", "qwen3.5:9b")
 try:
     tags = httpx.get(f"{base}/api/tags", timeout=5).json()
     models = [m["name"] for m in tags.get("models", [])]

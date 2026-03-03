@@ -17,6 +17,8 @@ from src.db.repositories.classified_feedback_repository import ClassifiedFeedbac
 from src.db.repositories.product_repository import ProductRepository
 from src.db.repositories.raw_feedback_repository import RawFeedbackRepository
 from src.db.repositories.scout_run_repository import ScoutRunRepository
+from src.ingestion.app_store_scraper import AppStoreScraper
+from src.ingestion.google_play_scraper import GooglePlayScraper
 from src.ingestion.reddit_scraper import RedditScraper
 from src.ingestion.youtube_scraper import YouTubeScraper
 from src.llm.classifier import LLMClassifier
@@ -34,6 +36,8 @@ class ScoutRunner:
         self._classified_repo = ClassifiedFeedbackRepository()
         self._reddit = RedditScraper()
         self._youtube = YouTubeScraper()
+        self._google_play = GooglePlayScraper()
+        self._app_store = AppStoreScraper()
         self._classifier = LLMClassifier()
         self._trend_analyser = TrendAnalyser()
 
@@ -100,8 +104,32 @@ class ScoutRunner:
                 youtube_inserted,
             )
 
-            # 3c. Total inserted
-            total_inserted = reddit_inserted + youtube_inserted
+            # 3c. Google Play Store
+            gplay_items = self._google_play.fetch(product)
+            gplay_inserted = self._feedback_repo.insert_many(
+                gplay_items, product_id, run_id
+            )
+            logger.info(
+                "Run #%d — GooglePlay: fetched=%d, inserted=%d.",
+                run_id,
+                len(gplay_items),
+                gplay_inserted,
+            )
+
+            # 3d. Apple App Store
+            appstore_items = self._app_store.fetch(product)
+            appstore_inserted = self._feedback_repo.insert_many(
+                appstore_items, product_id, run_id
+            )
+            logger.info(
+                "Run #%d — AppStore: fetched=%d, inserted=%d.",
+                run_id,
+                len(appstore_items),
+                appstore_inserted,
+            )
+
+            # 3e. Total inserted
+            total_inserted = reddit_inserted + youtube_inserted + gplay_inserted + appstore_inserted
 
             # 4. Mark ingestion as completed (classification updates items_classified next)
             self._run_repo.complete(run_id, items_fetched=total_inserted)

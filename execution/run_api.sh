@@ -9,7 +9,7 @@ VENV="$BACKEND/.venv"
 
 if [[ ! -d "$VENV" ]]; then
   echo "ERROR: venv not found at $VENV"
-  echo "Run: python3 -m virtualenv $VENV && $VENV/bin/pip install -r $BACKEND/requirements.txt"
+  echo "Run: uv venv $VENV && uv pip install -r $BACKEND/requirements.txt"
   exit 1
 fi
 
