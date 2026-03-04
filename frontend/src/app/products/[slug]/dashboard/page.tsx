@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { PulseScoreBar } from "@/components/pulse/PulseScoreBar";
 import { CategoryCards } from "@/components/pulse/CategoryCards";
 import { TrendingBarChart } from "@/components/pulse/TrendingBarChart";
@@ -22,17 +21,16 @@ import {
 } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
 
-function statusBadge(status: string | null) {
+function StatusPip({ status }: { status: string | null }) {
   if (!status) return null;
-  const variant =
-    status === "completed"
-      ? "bg-green-100 text-green-800"
-      : status === "running"
-      ? "bg-yellow-100 text-yellow-800"
-      : "bg-red-100 text-red-800";
+  const color =
+    status === "completed" ? "#3fb950" :
+    status === "running"   ? "#f59e0b" :
+                             "#f85149";
   return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${variant}`}>
-      {status}
+    <span className="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-widest uppercase">
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <span style={{ color }}>{status}</span>
     </span>
   );
 }
@@ -87,87 +85,112 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
     if (cat) router.push(`/products/${params.slug}/feed?category=${cat}`);
   }
 
-  if (error) return <p className="p-8 text-red-500">{error}</p>;
-  if (!product || !summary) return <p className="p-8 text-muted-foreground">Loading…</p>;
+  if (error) return (
+    <div className="p-8">
+      <p className="font-mono text-xs text-destructive tracking-wide">ERR: {error}</p>
+    </div>
+  );
+  if (!product || !summary) return (
+    <div className="p-8">
+      <p className="font-mono text-xs text-muted-foreground tracking-widest animate-pulse">LOADING…</p>
+    </div>
+  );
+
+  const sentimentColor =
+    summary.avg_sentiment > 0.1  ? "#3fb950" :
+    summary.avg_sentiment < -0.1 ? "#f85149" :
+                                    "hsl(var(--muted-foreground))";
 
   return (
     <main className="p-6 max-w-6xl mx-auto space-y-6">
-      {/* Header strip */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold">{product.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            Last updated {formatRelativeTime(summary.last_scout_at)}
-            {summary.last_scout_status && (
-              <> &nbsp;{statusBadge(summary.last_scout_status)}</>
-            )}
-          </p>
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-start gap-4 pb-4 border-b border-border">
+        <div className="flex-1 min-w-0 space-y-1">
+          <h1 className="font-display font-bold text-xl tracking-tight text-foreground">
+            {product.name}
+          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="font-mono text-[11px] text-muted-foreground">
+              Updated {formatRelativeTime(summary.last_scout_at)}
+            </span>
+            <StatusPip status={summary.last_scout_status} />
+          </div>
         </div>
-        <Button onClick={handleScout} disabled={scouting} size="sm">
-          {scouting ? "Scouting…" : "Run Scout Now"}
+        <Button
+          onClick={handleScout}
+          disabled={scouting}
+          size="sm"
+          className="font-display font-semibold text-[11px] tracking-[0.12em] uppercase shrink-0"
+        >
+          {scouting ? "Scouting…" : "Run Scout"}
         </Button>
       </div>
 
-      <Separator />
-
-      {/* Pulse Score Bar */}
-      <div className="space-y-1">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Category Breakdown — Last 7 days ({summary.total_items} items)
-        </h2>
+      {/* ── Pulse bar ──────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="font-display text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+            Category Breakdown — Last 7 days
+          </p>
+          <p className="font-mono text-[11px] text-muted-foreground tabular-nums">
+            {summary.total_items} items
+          </p>
+        </div>
         <PulseScoreBar
           counts={summary.category_counts}
           onCategoryClick={(cat) => handleCategorySelect(cat)}
         />
       </div>
 
-      {/* Category Cards */}
+      {/* ── Category cards ─────────────────────────────────────────── */}
       <CategoryCards
         counts={summary.category_counts}
         selectedCategory={selectedCategory}
         onSelect={handleCategorySelect}
       />
 
-      {/* Avg sentiment */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-muted-foreground">Avg sentiment:</span>
-        <span
-          className="font-semibold"
-          style={{
-            color:
-              summary.avg_sentiment > 0.1
-                ? "#22C55E"
-                : summary.avg_sentiment < -0.1
-                ? "#EF4444"
-                : "#6B7280",
-          }}
+      {/* ── Sentiment strip ────────────────────────────────────────── */}
+      <div className="flex items-center gap-4 py-3 px-4 bg-card border border-border rounded-sm">
+        <p className="font-display text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground shrink-0">
+          Avg Sentiment
+        </p>
+        <p
+          className="font-mono text-xl font-medium tabular-nums"
+          style={{ color: sentimentColor }}
         >
-          {summary.avg_sentiment.toFixed(3)}
-        </span>
-        <Badge variant="outline" className="text-xs">
+          {summary.avg_sentiment > 0 ? "+" : ""}{summary.avg_sentiment.toFixed(3)}
+        </p>
+        <Badge
+          variant="outline"
+          className="font-mono text-[10px] tracking-widest uppercase border-border"
+        >
           {summary.sentiment_trend}
         </Badge>
         {summary.top_trend && (
-          <span className="ml-4 text-muted-foreground">
-            Top trend: <span className="font-medium text-foreground">{summary.top_trend}</span>
-          </span>
+          <div className="ml-auto flex items-center gap-2 min-w-0">
+            <span className="font-display text-[10px] tracking-[0.15em] uppercase text-muted-foreground shrink-0">
+              Top Trend
+            </span>
+            <span className="font-mono text-xs text-primary truncate">
+              {summary.top_trend}
+            </span>
+          </div>
         )}
       </div>
 
-      <Separator />
-
-      {/* Charts grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+      {/* ── Charts grid ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="border border-border rounded-sm p-4 space-y-3">
+          <p className="font-display text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
             Trending Topics
-          </h2>
+          </p>
           <TrendingBarChart trends={trends?.trends ?? []} />
         </div>
-        <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <div className="border border-border rounded-sm p-4 space-y-3">
+          <p className="font-display text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
             Sentiment — Last 14 days
-          </h2>
+          </p>
           <SentimentTimeline feedbackItems={feedItems} />
         </div>
       </div>

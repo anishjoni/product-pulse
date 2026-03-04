@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getProducts } from "@/lib/api";
-import { Separator } from "@/components/ui/separator";
 
 export const dynamic = "force-dynamic";
 
@@ -21,30 +20,43 @@ export default async function ProductLayout({ children, params }: Props) {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b px-6 py-3 flex items-center gap-6">
-        <Link href="/" className="font-bold text-lg tracking-tight">
-          Pulse
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="border-b border-border flex items-stretch h-11 shrink-0">
+        {/* Logo mark */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 px-5 border-r border-border hover:bg-card transition-colors"
+        >
+          <span className="font-display font-bold text-xs tracking-[0.25em] uppercase text-foreground">
+            PULSE
+          </span>
+          <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
         </Link>
+
+        {/* Product name */}
         {product && (
-          <>
-            <Separator orientation="vertical" className="h-5" />
-            <span className="text-muted-foreground text-sm font-medium">{product.name}</span>
-          </>
+          <div className="flex items-center px-4 border-r border-border">
+            <span className="font-mono text-[11px] text-muted-foreground tracking-wide">
+              {product.name.toUpperCase()}
+            </span>
+          </div>
         )}
-        <nav className="ml-auto flex gap-4 text-sm">
+
+        {/* Nav links — right-aligned, each in its own bordered cell */}
+        <nav className="ml-auto flex items-stretch">
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center px-5 border-l border-border font-display font-semibold text-[11px] tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             >
               {l.label}
             </Link>
           ))}
         </nav>
       </header>
-      <div className="flex-1">{children}</div>
+
+      <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
 }

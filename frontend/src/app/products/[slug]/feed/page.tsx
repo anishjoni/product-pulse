@@ -47,44 +47,41 @@ export default function FeedPage({ params }: { params: { slug: string } }) {
 
   useEffect(() => { loadFeed(); }, [loadFeed]);
 
-  function handleFiltersChange(next: FeedbackQueryParams) {
-    setFilters(next);
-  }
-
   return (
     <div className="flex flex-col">
-      <FeedFilters params={filters} onChange={handleFiltersChange} />
+      <FeedFilters params={filters} onChange={setFilters} />
 
       <div className="p-4 max-w-3xl mx-auto w-full space-y-3">
-        <p className="text-sm text-muted-foreground">
-          {loading ? "Loading…" : `${total} items`}
+        <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground">
+          {loading ? "LOADING…" : `${total} ITEMS`}
         </p>
 
         {items.map((item) => (
           <FeedCard key={item.id} item={item} />
         ))}
 
-        {/* Pagination */}
         {pages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-4">
+          <div className="flex items-center justify-center gap-3 pt-6">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               disabled={filters.page === 1}
+              className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground h-7 px-3"
               onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) - 1 }))}
             >
-              Previous
+              ← PREV
             </Button>
-            <span className="text-sm">
-              Page {filters.page} of {pages}
+            <span className="font-mono text-[10px] tracking-widest text-muted-foreground tabular-nums">
+              {filters.page} / {pages}
             </span>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               disabled={filters.page === pages}
+              className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground h-7 px-3"
               onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) + 1 }))}
             >
-              Next
+              NEXT →
             </Button>
           </div>
         )}

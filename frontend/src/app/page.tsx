@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getProducts } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +11,11 @@ export default async function Home() {
   } catch {
     return (
       <main className="flex min-h-screen items-center justify-center p-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Product Pulse</h1>
-          <p className="text-muted-foreground">
+        <div className="text-center space-y-3">
+          <p className="font-display font-bold text-xl tracking-tight">PULSE</p>
+          <p className="font-mono text-xs text-muted-foreground">
             Could not connect to the API. Make sure the backend is running at{" "}
-            <code className="text-sm bg-muted px-1 rounded">
+            <code className="text-primary">
               {process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000"}
             </code>
           </p>
@@ -32,23 +31,47 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Product Pulse</h1>
-        <p className="text-muted-foreground mb-8">Select a product to view its dashboard.</p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {active.map((p) => (
-            <Link key={p.id} href={`/products/${p.slug}/dashboard`}>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle>{p.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{p.description ?? "No description."}</p>
-                </CardContent>
-              </Card>
+    <main className="min-h-screen flex items-center justify-center p-8">
+      <div className="w-full max-w-lg space-y-8">
+        {/* Wordmark */}
+        <div className="text-center space-y-1">
+          <h1 className="font-display font-bold text-2xl tracking-[0.25em] uppercase text-foreground">
+            PULSE
+          </h1>
+          <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+            Select a product
+          </p>
+        </div>
+
+        {/* Product list */}
+        <div className="border border-border rounded-sm overflow-hidden">
+          {active.map((p, i) => (
+            <Link
+              key={p.id}
+              href={`/products/${p.slug}/dashboard`}
+              className={`flex items-center gap-4 px-5 py-4 transition-colors hover:bg-card focus-visible:outline-none focus-visible:bg-card${i > 0 ? " border-t border-border" : ""}`}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+              <div className="flex-1 min-w-0 space-y-0.5">
+                <p className="font-display font-semibold text-sm tracking-tight text-foreground">
+                  {p.name}
+                </p>
+                {p.description && (
+                  <p className="font-mono text-[10px] text-muted-foreground truncate">
+                    {p.description}
+                  </p>
+                )}
+              </div>
+              <span className="font-mono text-[10px] tracking-widest text-muted-foreground shrink-0">
+                →
+              </span>
             </Link>
           ))}
+          {active.length === 0 && (
+            <p className="px-5 py-4 font-mono text-[10px] tracking-widest uppercase text-muted-foreground/50">
+              No active products.
+            </p>
+          )}
         </div>
       </div>
     </main>

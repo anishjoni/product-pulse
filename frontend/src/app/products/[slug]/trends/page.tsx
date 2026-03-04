@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import { formatPct } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CATEGORY_LABELS } from "@/lib/utils";
 
 export default function TrendsPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
@@ -45,47 +46,62 @@ export default function TrendsPage({ params }: { params: { slug: string } }) {
     URL.revokeObjectURL(url);
   }
 
-  if (loading) return <p className="p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return (
+    <p className="p-8 font-mono text-[10px] tracking-widest uppercase text-muted-foreground animate-pulse">
+      LOADING…
+    </p>
+  );
 
   return (
-    <main className="p-6 max-w-5xl mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Trending Topics</h1>
+    <main className="p-6 max-w-5xl mx-auto space-y-5">
+      <div className="flex items-start justify-between pb-4 border-b border-border">
+        <div className="space-y-1">
+          <h1 className="font-display font-bold text-xl tracking-tight text-foreground">
+            Trending Topics
+          </h1>
           {computedAt && (
-            <p className="text-sm text-muted-foreground">
-              Computed at {new Date(computedAt + "Z").toLocaleString()}
+            <p className="font-mono text-[10px] text-muted-foreground tracking-widest">
+              COMPUTED {new Date(computedAt + "Z").toLocaleString().toUpperCase()}
             </p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={exportCsv} disabled={trends.length === 0}>
-          Export CSV
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={exportCsv}
+          disabled={trends.length === 0}
+          className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground h-7 px-3 border border-border"
+        >
+          EXPORT CSV ↓
         </Button>
       </div>
 
       {trends.length === 0 ? (
-        <p className="text-muted-foreground">No trend data yet. Run a scout first.</p>
+        <p className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground py-8 text-center">
+          NO TREND DATA — RUN A SCOUT
+        </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left px-4 py-2 font-medium">Topic</th>
-                <th className="text-right px-4 py-2 font-medium">Current</th>
-                <th className="text-right px-4 py-2 font-medium">Previous</th>
-                <th className="text-right px-4 py-2 font-medium">Change</th>
-                <th className="text-left px-4 py-2 font-medium">Top Category</th>
+        <div className="border border-border rounded-sm overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-card">
+                <th className="text-left px-4 py-2 font-display text-[10px] tracking-[0.18em] uppercase text-muted-foreground font-semibold">Topic</th>
+                <th className="text-right px-4 py-2 font-display text-[10px] tracking-[0.18em] uppercase text-muted-foreground font-semibold">Current</th>
+                <th className="text-right px-4 py-2 font-display text-[10px] tracking-[0.18em] uppercase text-muted-foreground font-semibold">Previous</th>
+                <th className="text-right px-4 py-2 font-display text-[10px] tracking-[0.18em] uppercase text-muted-foreground font-semibold">Change</th>
+                <th className="text-left px-4 py-2 font-display text-[10px] tracking-[0.18em] uppercase text-muted-foreground font-semibold">Category</th>
               </tr>
             </thead>
             <tbody>
               {trends.map((t, i) => {
                 const topCat =
                   Object.entries(t.category_breakdown).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "—";
+                const pctColor = t.pct_change >= 0 ? "#3fb950" : "#f85149";
                 return (
                   <tr
                     key={i}
                     tabIndex={0}
-                    className="border-t cursor-pointer hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:bg-muted/30"
+                    className="border-t border-border cursor-pointer hover:bg-card transition-colors focus-visible:outline-none focus-visible:bg-card"
                     onClick={() =>
                       router.push(
                         `/products/${params.slug}/feed?search=${encodeURIComponent(t.topic)}`
@@ -98,16 +114,18 @@ export default function TrendsPage({ params }: { params: { slug: string } }) {
                       )
                     }
                   >
-                    <td className="px-4 py-2 font-medium">{t.topic}</td>
-                    <td className="px-4 py-2 text-right">{t.current_count}</td>
-                    <td className="px-4 py-2 text-right">{t.previous_count}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-foreground/90">{t.topic}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-right tabular-nums text-muted-foreground">{t.current_count}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-right tabular-nums text-muted-foreground">{t.previous_count}</td>
                     <td
-                      className="px-4 py-2 text-right font-semibold"
-                      style={{ color: t.pct_change >= 0 ? "#22C55E" : "#EF4444" }}
+                      className="px-4 py-2.5 font-mono text-xs text-right tabular-nums font-medium"
+                      style={{ color: pctColor }}
                     >
                       {formatPct(t.pct_change)}
                     </td>
-                    <td className="px-4 py-2 capitalize">{topCat.replace(/_/g, " ")}</td>
+                    <td className="px-4 py-2.5 font-mono text-[10px] tracking-widest uppercase text-muted-foreground">
+                      {CATEGORY_LABELS[topCat] ?? topCat.replace(/_/g, " ")}
+                    </td>
                   </tr>
                 );
               })}

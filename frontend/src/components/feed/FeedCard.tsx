@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_COLORS, CATEGORY_LABELS, formatRelativeTime } from "@/lib/utils";
 import type { FeedbackItem } from "@/lib/api";
@@ -13,15 +11,15 @@ interface FeedCardProps {
 }
 
 function sentimentColor(s: number): string {
-  if (s > 0.3) return "#22C55E";
-  if (s < -0.3) return "#EF4444";
-  return "#6B7280";
+  if (s > 0.3)  return "#3fb950";
+  if (s < -0.3) return "#f85149";
+  return "#6b6560";
 }
 
 function sentimentLabel(s: number): string {
-  if (s > 0.3) return "Positive";
-  if (s < -0.3) return "Negative";
-  return "Neutral";
+  if (s > 0.3)  return "POS";
+  if (s < -0.3) return "NEG";
+  return "NEU";
 }
 
 export function FeedCard({ item }: FeedCardProps) {
@@ -44,70 +42,98 @@ export function FeedCard({ item }: FeedCardProps) {
     setExpanded((v) => !v);
   }
 
-  const catColor = CATEGORY_COLORS[item.category] ?? "#6B7280";
+  const catColor = CATEGORY_COLORS[item.category] ?? "#6b6560";
   const catLabel = CATEGORY_LABELS[item.category] ?? item.category;
 
   return (
-    <Card className="transition-shadow hover:shadow-sm">
-      <CardContent className="p-4 space-y-2">
-        {/* Top row: badges + date */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge style={{ backgroundColor: catColor, color: "#fff", border: "none" }}>
+    <div className="border border-border bg-card hover:bg-[hsl(30,8%,9%)] transition-colors rounded-sm overflow-hidden">
+      {/* Category color bar */}
+      <div className="h-[2px] w-full" style={{ backgroundColor: catColor }} />
+
+      <div className="p-4 space-y-3">
+        {/* Top row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span
+            className="font-display text-[10px] font-semibold tracking-[0.18em] uppercase px-2 py-0.5 rounded-sm"
+            style={{ backgroundColor: `${catColor}22`, color: catColor }}
+          >
             {catLabel}
-          </Badge>
-          <Badge variant="outline" className="capitalize">
+          </span>
+          <span className="font-mono text-[10px] tracking-widest uppercase text-muted-foreground border border-border px-2 py-0.5 rounded-sm">
             {item.source_ref}
-          </Badge>
+          </span>
           {item.confidence < 0.7 && (
-            <Badge variant="outline" className="text-yellow-600 border-yellow-400">
-              Low confidence
-            </Badge>
+            <span className="font-mono text-[10px] tracking-widest uppercase text-yellow-600 border border-yellow-900/40 px-2 py-0.5 rounded-sm">
+              LOW CONF
+            </span>
           )}
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">
             {formatRelativeTime(item.fetched_at)}
           </span>
         </div>
 
-        {/* LLM summary */}
-        <p className="text-sm font-medium leading-snug">{item.summary || "No summary."}</p>
+        {/* Summary */}
+        <p className="text-sm leading-relaxed text-foreground/90">
+          {item.summary || "No summary."}
+        </p>
 
-        {/* Sentiment + score */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
+        {/* Meta row */}
+        <div className="flex items-center gap-4 pt-1">
+          <span className="flex items-center gap-1.5">
             <span
-              className="inline-block h-2 w-2 rounded-full"
+              className="h-1.5 w-1.5 rounded-full shrink-0"
               style={{ backgroundColor: sentimentColor(item.sentiment) }}
             />
-            {sentimentLabel(item.sentiment)} ({item.sentiment.toFixed(2)})
-          </span>
-          {item.score != null && <span>Score: {item.score}</span>}
-          {item.author && <span>by {item.author}</span>}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          {item.url && (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-500 hover:underline"
+            <span
+              className="font-mono text-[10px] tracking-widest uppercase tabular-nums"
+              style={{ color: sentimentColor(item.sentiment) }}
             >
-              View original ↗
-            </a>
+              {sentimentLabel(item.sentiment)}
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+              {item.sentiment >= 0 ? "+" : ""}{item.sentiment.toFixed(2)}
+            </span>
+          </span>
+          {item.score != null && (
+            <span className="font-mono text-[10px] text-muted-foreground">
+              ↑{item.score}
+            </span>
           )}
-          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={handleExpand}>
-            {loading ? "Loading…" : expanded ? "Collapse" : "Show raw"}
-          </Button>
+          {item.author && (
+            <span className="font-mono text-[10px] text-muted-foreground truncate">
+              {item.author}
+            </span>
+          )}
+
+          <div className="ml-auto flex items-center gap-2">
+            {item.url && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-[10px] tracking-widest uppercase text-primary hover:text-primary/80 transition-colors"
+              >
+                SRC ↗
+              </a>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 px-2 font-mono text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground"
+              onClick={handleExpand}
+            >
+              {loading ? "…" : expanded ? "HIDE" : "RAW"}
+            </Button>
+          </div>
         </div>
 
-        {/* Expandable raw content */}
+        {/* Raw content */}
         {expanded && rawContent !== null && (
-          <pre className="mt-2 max-h-48 overflow-y-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap">
+          <pre className="mt-2 max-h-48 overflow-y-auto bg-background border border-border rounded-sm p-3 font-mono text-[11px] text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {rawContent}
           </pre>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

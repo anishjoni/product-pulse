@@ -15,7 +15,7 @@ export function PulseScoreBar({ counts, onCategoryClick }: PulseScoreBarProps) {
 
   return (
     <TooltipProvider>
-      <div className="flex h-8 w-full overflow-hidden rounded-lg">
+      <div className="flex h-10 w-full overflow-hidden rounded-sm gap-px bg-border">
         {ALL_CATEGORIES.map((cat) => {
           const count = counts[cat] ?? 0;
           if (count === 0) return null;
@@ -26,7 +26,7 @@ export function PulseScoreBar({ counts, onCategoryClick }: PulseScoreBarProps) {
                 <button
                   type="button"
                   aria-label={`${CATEGORY_LABELS[cat]}: ${count} items, ${pct}%`}
-                  className="cursor-pointer transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                  className="relative group cursor-pointer transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset overflow-hidden"
                   style={{
                     width: `${(count / total) * 100}%`,
                     backgroundColor: CATEGORY_COLORS[cat],
@@ -35,11 +35,18 @@ export function PulseScoreBar({ counts, onCategoryClick }: PulseScoreBarProps) {
                     height: "100%",
                   }}
                   onClick={() => onCategoryClick?.(cat)}
-                />
+                >
+                  {/* Percentage label — shown only if wide enough */}
+                  {(count / total) * 100 > 10 && (
+                    <span className="absolute inset-0 flex items-center justify-center font-mono text-[10px] font-medium text-white/80 tabular-nums">
+                      {pct}%
+                    </span>
+                  )}
+                </button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p className="font-semibold">{CATEGORY_LABELS[cat]}</p>
-                <p>
+              <TooltipContent className="font-sans">
+                <p className="font-display font-semibold text-xs tracking-wide">{CATEGORY_LABELS[cat]}</p>
+                <p className="font-mono text-xs text-muted-foreground mt-0.5">
                   {count} items &middot; {pct}%
                 </p>
               </TooltipContent>
