@@ -37,3 +37,7 @@ frontend/        ← Next.js 14 application
 - LLM: Gemini 2.0 Flash (primary, free tier), Ollama llama3 (fallback)
 - Frontend: Next.js 14, TypeScript, Shadcn/UI, Tailwind, Recharts
 - Deployment: Docker Compose (local), Modal (backend hosted), Vercel (frontend hosted)
+
+## Linear / MCP
+When querying Linear, always filter to project **"Product pulse"** (id: `5c1b9436-a950-40d4-9e43-682da071127d`).
+Do not list issues or data from other projects unless explicitly asked.

@@ -74,7 +74,7 @@ class BertClassifier:
         category = LABEL_MAP[top_label]
 
         # --- Sentiment via RoBERTa ---
-        sent_result = self._sentiment(text)[0]  # list of {label, score} dicts
+        sent_result = self._sentiment(text)  # list of {label, score} dicts
         scores: dict[str, float] = {d["label"]: d["score"] for d in sent_result}
 
         # Label keys from this model: "positive", "neutral", "negative"

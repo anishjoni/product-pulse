@@ -31,10 +31,18 @@ Post:
 {content[:2000]}
 ---
 
+Category definitions — pick the MOST specific one that fits:
+- feature_request : User asks for a new feature, suggests an improvement, or expresses a wish ("I wish", "would be great if", "please add", "why can't we").
+- bug_report      : Reports broken behaviour, an error, unexpected result, or something that stopped working ("doesn't work", "broken", "error", "used to work").
+- complaint       : Expresses frustration or dissatisfaction with an existing aspect (pricing, policy, UX friction, slow performance, negative comparison to competitors) WITHOUT reporting a specific bug.
+- praise          : Positive sentiment, recommends the product, expresses satisfaction or gratitude ("love it", "great job", "best app", "thanks").
+- general_discussion : ONLY use this when the post is a neutral question, comparison, or informational exchange that genuinely does not fit any of the above. Do NOT use it as a fallback when unsure — prefer the closest specific category.
+
 Rules:
 - Reply with ONLY a JSON object — nothing else.
 - Do NOT write any text before or after the JSON.
 - Do NOT use markdown, code fences, or any explanation.
+- Prefer a specific category over general_discussion whenever there is a reasonable match.
 
 Required JSON format (fill in the values):
 {{"category":"<feature_request|bug_report|complaint|praise|general_discussion>","sentiment":<float -1.0 to 1.0>,"summary":"<one sentence max 120 chars third person>","topics":["<keyword>"],"confidence":<float 0.0 to 1.0>}}"""

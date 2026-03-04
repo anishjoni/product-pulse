@@ -1,0 +1,47 @@
+[project]
+name = "product-pulse-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.115.0",
+    "uvicorn[standard]==0.30.6",
+    "python-dotenv==1.0.1",
+    "pydantic==2.9.2",
+    "polars==1.9.0",
+    "google-generativeai==0.8.3",
+    "httpx==0.27.2",
+    "apscheduler==3.10.4",
+    "praw==7.7.1",
+    "google-api-python-client==2.143.0",
+    "anthropic>=0.84.0",
+    "google-play-scraper==1.2.7",
+    "app-store-scraper==0.3.5",
+]
+
+[project.optional-dependencies]
+experiments = [
+    "torch",
+    "transformers>=4.40",
+    "scipy",
+]
+
+[tool.uv]
+# app-store-scraper==0.3.5 pins requests==2.23.0, which pulls urllib3==1.25.x.
+# urllib3 1.25.x has a vendored six that is broken on Python 3.12.
+# Force newer versions — app-store-scraper works fine with them at runtime.
+override-dependencies = [
+    "requests>=2.28.0",
+    "urllib3>=1.26.0,<2",
+]
+
+[tool.uv.sources]
+# Pull torch from the PyTorch CPU-only index so we don't download the
+# 2 GB CUDA wheel when running on a machine without a GPU.
+torch = [
+    { index = "pytorch-cpu" }
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

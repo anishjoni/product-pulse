@@ -8,13 +8,11 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND="$REPO_ROOT/backend"
-PY="$BACKEND/.venv/bin/python3"
-
 cd "$BACKEND"
 export DATABASE_URL="${DATABASE_URL:-sqlite:///./data/pulse.db}"
 PRODUCT_ID="${1:-1}"
 
-"$PY" - "$PRODUCT_ID" <<'PYEOF'
+uv run python - "$PRODUCT_ID" <<'PYEOF'
 import sys, sqlite3
 sys.path.insert(0, ".")
 

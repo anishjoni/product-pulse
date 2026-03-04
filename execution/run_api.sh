@@ -1,17 +1,10 @@
 #!/usr/bin/env bash
 # Run the Product Pulse FastAPI dev server.
-# Usage: bash execution/run_api.sh [--port 8000] [--reload]
+# Usage: bash execution/run_api.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND="$REPO_ROOT/backend"
-VENV="$BACKEND/.venv"
-
-if [[ ! -d "$VENV" ]]; then
-  echo "ERROR: venv not found at $VENV"
-  echo "Run: uv venv $VENV && uv pip install -r $BACKEND/requirements.txt"
-  exit 1
-fi
 
 cd "$BACKEND"
 
@@ -21,9 +14,8 @@ if [[ -f "$REPO_ROOT/.env" ]]; then
 fi
 
 PORT="${PORT:-8000}"
-RELOAD_FLAG="--reload"
 
-exec "$VENV/bin/uvicorn" src.api.main:app \
+exec uv run uvicorn src.api.main:app \
   --host 0.0.0.0 \
   --port "$PORT" \
-  $RELOAD_FLAG
+  --reload

@@ -12,7 +12,7 @@ N=${2:-100}
 cd "$(dirname "$0")/../backend"
 
 echo "Installing experiment dependencies (torch CPU, transformers, scipy) …"
-.venv/bin/pip install -q -r requirements-experiments.txt
+uv sync --extra experiments
 
 echo "Starting evaluation: product_id=${PRODUCT_ID}, n_samples=${N}"
-.venv/bin/python -m src.experiments.eval_classifiers "$PRODUCT_ID" "$N"
+uv run python -m src.experiments.eval_classifiers "$PRODUCT_ID" "$N"
