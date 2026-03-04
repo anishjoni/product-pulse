@@ -95,8 +95,8 @@ export default function TrendsPage({ params }: { params: { slug: string } }) {
                     <td className="px-4 py-2 text-right">{t.current_count}</td>
                     <td className="px-4 py-2 text-right">{t.previous_count}</td>
                     <td
-                      className="px-4 py-2 text-right font-semibold"
-                      style={{ color: t.pct_change >= 0 ? "#22C55E" : "#EF4444" }}
+                      className="px-4 py-2 text-right font-semibold tabular-nums"
+                      style={{ color: t.pct_change >= 0 ? "var(--color-positive)" : "var(--color-negative)" }}
                     >
                       {formatPct(t.pct_change)}
                     </td>

@@ -162,7 +162,7 @@ export default function SettingsPage({ params }: { params: { slug: string } }) {
         <Button onClick={handleSave} disabled={saving}>
           {saving ? "Saving…" : "Save Changes"}
         </Button>
-        {saved && <span className="text-green-600 text-sm">Saved!</span>}
+        {saved && <span className="text-sm" style={{ color: "var(--color-positive)" }}>Saved!</span>}
       </div>
 
       <Separator />

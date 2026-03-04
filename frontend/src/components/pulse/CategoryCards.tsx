@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { ALL_CATEGORIES, CATEGORY_COLORS, CATEGORY_LABELS } from "@/lib/utils";
 import type { CategoryCounts } from "@/lib/api";
 
@@ -14,31 +13,45 @@ export function CategoryCards({ counts, selectedCategory, onSelect }: CategoryCa
   const total = ALL_CATEGORIES.reduce((sum, c) => sum + (counts[c] ?? 0), 0);
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       {ALL_CATEGORIES.map((cat) => {
         const count = counts[cat] ?? 0;
         const pct = total > 0 ? ((count / total) * 100).toFixed(0) : "0";
         const isSelected = selectedCategory === cat;
+        const color = CATEGORY_COLORS[cat];
 
         return (
-          <Card
+          <button
             key={cat}
-            className={`cursor-pointer transition-all hover:shadow-md ${
-              isSelected ? "ring-2 ring-offset-1" : ""
-            }`}
-            style={isSelected ? { outline: `2px solid ${CATEGORY_COLORS[cat]}` } : {}}
+            className="text-left rounded bg-card border border-border transition-colors hover:border-border focus:outline-none focus-visible:ring-1 focus-visible:ring-ring overflow-hidden"
+            style={
+              isSelected
+                ? { borderColor: color, boxShadow: `0 0 0 1px ${color}` }
+                : undefined
+            }
             onClick={() => onSelect(isSelected ? null : cat)}
+            aria-pressed={isSelected}
           >
-            <CardContent className="p-4">
+            <div className="flex h-full">
+              {/* Left color stripe */}
               <div
-                className="mb-1 h-1 w-8 rounded-full"
-                style={{ backgroundColor: CATEGORY_COLORS[cat] }}
+                className="w-[3px] shrink-0 self-stretch"
+                style={{ backgroundColor: color }}
               />
-              <p className="text-xs text-muted-foreground">{CATEGORY_LABELS[cat]}</p>
-              <p className="text-2xl font-bold">{count}</p>
-              <p className="text-xs text-muted-foreground">{pct}% of total</p>
-            </CardContent>
-          </Card>
+              <div className="px-3 py-3 min-w-0">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate mb-0.5">
+                  {CATEGORY_LABELS[cat]}
+                </p>
+                <p
+                  className="font-bold tabular-nums leading-none"
+                  style={{ fontFamily: "var(--font-geist-mono)", fontSize: 22 }}
+                >
+                  {count}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">{pct}% of total</p>
+              </div>
+            </div>
+          </button>
         );
       })}
     </div>

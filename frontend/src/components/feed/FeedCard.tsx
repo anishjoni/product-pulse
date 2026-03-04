@@ -1,9 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CATEGORY_COLORS, CATEGORY_LABELS, formatRelativeTime } from "@/lib/utils";
 import type { FeedbackItem } from "@/lib/api";
 import { getFeedbackItem } from "@/lib/api";
@@ -12,16 +9,10 @@ interface FeedCardProps {
   item: FeedbackItem;
 }
 
-function sentimentColor(s: number): string {
-  if (s > 0.3) return "#22C55E";
-  if (s < -0.3) return "#EF4444";
-  return "#6B7280";
-}
-
-function sentimentLabel(s: number): string {
-  if (s > 0.3) return "Positive";
-  if (s < -0.3) return "Negative";
-  return "Neutral";
+function sentimentStyle(s: number): { label: string; color: string } {
+  if (s > 0.3) return { label: "Positive", color: "var(--color-positive)" };
+  if (s < -0.3) return { label: "Negative", color: "var(--color-negative)" };
+  return { label: "Neutral", color: "var(--color-ink-dim)" };
 }
 
 export function FeedCard({ item }: FeedCardProps) {
@@ -44,70 +35,88 @@ export function FeedCard({ item }: FeedCardProps) {
     setExpanded((v) => !v);
   }
 
-  const catColor = CATEGORY_COLORS[item.category] ?? "#6B7280";
+  const catColor = CATEGORY_COLORS[item.category] ?? "var(--color-ink-faint)";
   const catLabel = CATEGORY_LABELS[item.category] ?? item.category;
+  const sent = sentimentStyle(item.sentiment);
 
   return (
-    <Card className="transition-shadow hover:shadow-sm">
-      <CardContent className="p-4 space-y-2">
-        {/* Top row: badges + date */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge style={{ backgroundColor: catColor, color: "#fff", border: "none" }}>
-            {catLabel}
-          </Badge>
-          <Badge variant="outline" className="capitalize">
-            {item.source_ref}
-          </Badge>
-          {item.confidence < 0.7 && (
-            <Badge variant="outline" className="text-yellow-600 border-yellow-400">
-              Low confidence
-            </Badge>
-          )}
-          <span className="ml-auto text-xs text-muted-foreground">
-            {formatRelativeTime(item.fetched_at)}
-          </span>
-        </div>
+    <div
+      className="rounded bg-card border border-border overflow-hidden transition-colors hover:border-muted-foreground/30"
+    >
+      <div className="flex">
+        {/* Category color stripe */}
+        <div className="w-[3px] shrink-0" style={{ backgroundColor: catColor }} />
 
-        {/* LLM summary */}
-        <p className="text-sm font-medium leading-snug">{item.summary || "No summary."}</p>
-
-        {/* Sentiment + score */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
+        <div className="px-4 py-3 flex-1 min-w-0 space-y-2">
+          {/* Top meta row */}
+          <div className="flex items-center gap-2 flex-wrap">
             <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: sentimentColor(item.sentiment) }}
-            />
-            {sentimentLabel(item.sentiment)} ({item.sentiment.toFixed(2)})
-          </span>
-          {item.score != null && <span>Score: {item.score}</span>}
-          {item.author && <span>by {item.author}</span>}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3">
-          {item.url && (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-500 hover:underline"
+              className="text-[10px] font-medium uppercase tracking-wide"
+              style={{ color: catColor }}
             >
-              View original ↗
-            </a>
-          )}
-          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={handleExpand}>
-            {loading ? "Loading…" : expanded ? "Collapse" : "Show raw"}
-          </Button>
-        </div>
+              {catLabel}
+            </span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              {item.source_ref}
+            </span>
+            {item.confidence < 0.7 && (
+              <span className="text-[10px] text-yellow-500/80">low confidence</span>
+            )}
+            <span className="ml-auto text-[10px] text-muted-foreground tabular-nums">
+              {formatRelativeTime(item.fetched_at)}
+            </span>
+          </div>
 
-        {/* Expandable raw content */}
-        {expanded && rawContent !== null && (
-          <pre className="mt-2 max-h-48 overflow-y-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap">
-            {rawContent}
-          </pre>
-        )}
-      </CardContent>
-    </Card>
+          {/* Summary — dominant element */}
+          <p className="text-sm leading-snug">{item.summary || "No summary."}</p>
+
+          {/* Metadata row */}
+          <div className="flex items-center gap-3 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+            <span className="flex items-center gap-1">
+              <span
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ backgroundColor: sent.color }}
+              />
+              <span style={{ color: sent.color }}>{sent.label}</span>
+            </span>
+            {item.score != null && (
+              <span className="tabular-nums">{item.score} pts</span>
+            )}
+            {item.author && <span>by {item.author}</span>}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            {item.url && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] transition-colors"
+                style={{ color: "var(--color-signal)" }}
+              >
+                View original ↗
+              </a>
+            )}
+            <button
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              onClick={handleExpand}
+            >
+              {loading ? "Loading…" : expanded ? "Collapse" : "Show raw"}
+            </button>
+          </div>
+
+          {/* Expandable raw */}
+          {expanded && rawContent !== null && (
+            <pre
+              className="max-h-48 overflow-y-auto rounded p-3 text-[11px] whitespace-pre-wrap border border-border"
+              style={{ background: "var(--color-surface-base)" }}
+            >
+              {rawContent}
+            </pre>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

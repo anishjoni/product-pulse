@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getProducts } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +11,14 @@ export default async function Home() {
   } catch {
     return (
       <main className="flex min-h-screen items-center justify-center p-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Product Pulse</h1>
-          <p className="text-muted-foreground">
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+            <span className="text-base font-semibold tracking-tight">Pulse</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
             Could not connect to the API. Make sure the backend is running at{" "}
-            <code className="text-sm bg-muted px-1 rounded">
+            <code className="text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">
               {process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000"}
             </code>
           </p>
@@ -32,21 +34,30 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Product Pulse</h1>
-        <p className="text-muted-foreground mb-8">Select a product to view its dashboard.</p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <main className="min-h-screen flex flex-col items-center justify-center p-8">
+      <div className="w-full max-w-lg space-y-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+            <span className="text-base font-semibold tracking-tight">Pulse</span>
+          </div>
+          <p className="text-sm text-muted-foreground pl-5">
+            Select a product to view its dashboard.
+          </p>
+        </div>
+
+        <div className="space-y-2">
           {active.map((p) => (
             <Link key={p.id} href={`/products/${p.slug}/dashboard`}>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle>{p.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{p.description ?? "No description."}</p>
-                </CardContent>
-              </Card>
+              <div className="rounded bg-card border border-border overflow-hidden transition-colors hover:border-primary/40 flex group">
+                <div className="w-[3px] shrink-0 bg-primary opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="px-4 py-3">
+                  <p className="text-sm font-medium">{p.name}</p>
+                  {p.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{p.description}</p>
+                  )}
+                </div>
+              </div>
             </Link>
           ))}
         </div>

@@ -12,6 +12,16 @@ import {
 } from "recharts";
 import type { FeedbackItem } from "@/lib/api";
 
+const C = {
+  grid:    "#21262D",
+  tick:    "#484F58",
+  zero:    "#30363D",
+  signal:  "#6366F1",
+  tooltipBg:     "#1C2333",
+  tooltipBorder: "#30363D",
+  tooltipText:   "#E6EDF3",
+};
+
 interface SentimentTimelineProps {
   feedbackItems: FeedbackItem[];
 }
@@ -29,13 +39,11 @@ function buildDailyData(items: FeedbackItem[]) {
 
   for (const item of items) {
     const day = item.fetched_at.slice(0, 10);
-    if (dayMap[day]) {
-      dayMap[day].push(item.sentiment);
-    }
+    if (dayMap[day]) dayMap[day].push(item.sentiment);
   }
 
   return Object.entries(dayMap).map(([date, sentiments]) => ({
-    date: date.slice(5), // MM-DD
+    date: date.slice(5),
     avg:
       sentiments.length > 0
         ? parseFloat(
@@ -45,28 +53,63 @@ function buildDailyData(items: FeedbackItem[]) {
   }));
 }
 
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { value: number | null }[];
+  label?: string;
+}) => {
+  if (!active || !payload?.length) return null;
+  const val = payload[0].value;
+  return (
+    <div
+      className="rounded px-3 py-2 text-xs"
+      style={{
+        background: C.tooltipBg,
+        border: `1px solid ${C.tooltipBorder}`,
+        color: C.tooltipText,
+      }}
+    >
+      <p className="font-medium mb-0.5">{label}</p>
+      <p style={{ color: C.tick }}>
+        {val !== null ? val.toFixed(3) : "No data"}
+      </p>
+    </div>
+  );
+};
+
 export function SentimentTimeline({ feedbackItems }: SentimentTimelineProps) {
   const data = buildDailyData(feedbackItems);
 
   return (
     <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={data} margin={{ left: 0, right: 16, top: 8, bottom: 4 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-        <YAxis domain={[-1, 1]} tick={{ fontSize: 11 }} tickCount={5} />
-        <Tooltip
-          formatter={(v) => {
-            const num = typeof v === "number" ? v : null;
-            return num !== null ? [num.toFixed(3), "Avg Sentiment"] : ["No data", ""];
-          }}
+      <LineChart data={data} margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 10, fill: C.tick }}
+          axisLine={false}
+          tickLine={false}
         />
-        <ReferenceLine y={0} stroke="#94A3B8" strokeDasharray="4 4" />
+        <YAxis
+          domain={[-1, 1]}
+          tick={{ fontSize: 10, fill: C.tick }}
+          tickCount={5}
+          axisLine={false}
+          tickLine={false}
+          width={28}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <ReferenceLine y={0} stroke={C.zero} strokeWidth={1.5} />
         <Line
           type="monotone"
           dataKey="avg"
           dot={false}
           connectNulls
-          stroke="#3B82F6"
+          stroke={C.signal}
           strokeWidth={2}
         />
       </LineChart>
