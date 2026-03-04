@@ -9,42 +9,78 @@
 }
 
 @layer base {
+  /* ── Light mode (default) ───────────────────────────────────────── */
   :root {
-    /* Surfaces — deep slate, elevation via lightness only */
-    --background:  220 14%  7%;   /* #0D1117 — base canvas */
-    --card:        215 18% 11%;   /* #161B22 — cards, panels */
-    --popover:     220 28% 16%;   /* #1C2333 — raised: dropdowns, tooltips */
+    --background:  0 0% 100%;
+    --card:        210 20% 98%;
+    --popover:     0 0% 100%;
 
-    /* Text — four levels */
-    --foreground:       210 40% 96%;  /* #E6EDF3 — primary text */
+    --foreground:       221 40% 12%;
+    --card-foreground:  221 40% 12%;
+    --popover-foreground: 221 40% 12%;
+
+    --muted:            220 14% 95%;
+    --muted-foreground: 220 9% 46%;
+
+    --primary:          239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary:            220 14% 95%;
+    --secondary-foreground: 221 40% 12%;
+    --accent:               220 14% 95%;
+    --accent-foreground:    221 40% 12%;
+
+    --destructive:            0 84% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input:  220 13% 91%;
+    --ring:   239 84% 67%;
+
+    --radius: 0.375rem;
+
+    --color-signal:     #6366F1;
+    --color-positive:   #059669;
+    --color-negative:   #DC2626;
+    --color-warning:    #D97706;
+    --color-ink:        #111827;
+    --color-ink-dim:    #6B7280;
+    --color-ink-faint:  #9CA3AF;
+    --color-wire:       #E5E7EB;
+    --color-wire-strong:#D1D5DB;
+    --color-surface-base:   #FFFFFF;
+    --color-surface-card:   #F8F9FA;
+    --color-surface-raised: #FFFFFF;
+  }
+
+  /* ── Dark mode ──────────────────────────────────────────────────── */
+  .dark {
+    --background:  220 14%  7%;
+    --card:        215 18% 11%;
+    --popover:     220 28% 16%;
+
+    --foreground:       210 40% 96%;
     --card-foreground:  210 40% 96%;
     --popover-foreground: 210 40% 96%;
 
-    --muted:            215 18% 14%;  /* slightly above card */
-    --muted-foreground: 213  9% 57%;  /* #8B949E — secondary text */
+    --muted:            215 18% 14%;
+    --muted-foreground: 213  9% 57%;
 
-    /* Signal — electric indigo, used sparingly */
-    --primary:          239 84% 67%;  /* #6366F1 */
+    --primary:          239 84% 67%;
     --primary-foreground: 0 0% 100%;
 
-    /* Supporting surfaces */
     --secondary:            220 28% 16%;
     --secondary-foreground: 210 40% 96%;
     --accent:               220 28% 16%;
     --accent-foreground:    210 40% 96%;
 
-    /* Semantic */
-    --destructive:            0 84% 60%;  /* #EF4444 */
-    --destructive-foreground: 0  0% 100%;
+    --destructive:            0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Borders — wire */
-    --border: 213 11% 15%;  /* #21262D */
+    --border: 213 11% 15%;
     --input:  213 11% 15%;
-    --ring:   239 84% 67%;  /* signal on focus */
+    --ring:   239 84% 67%;
 
-    --radius: 0.375rem;
-
-    /* Hex vars for Recharts + inline styles (CSS vars, not Tailwind) */
     --color-signal:     #6366F1;
     --color-positive:   #10B981;
     --color-negative:   #EF4444;

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { getProducts } from "@/lib/api";
 import { NavLinks } from "@/components/NavLinks";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { SearchPalette } from "@/components/SearchPalette";
+import { SearchTrigger } from "@/components/SearchTrigger";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +31,15 @@ export default async function ProductLayout({ children, params }: Props) {
             </span>
           </>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
           <NavLinks slug={params.slug} />
+          <div className="w-px h-4 bg-border mx-1" />
+          <SearchTrigger />
+          <ThemeToggle />
         </div>
       </header>
       <div className="flex-1">{children}</div>
+      <SearchPalette />
     </div>
   );
 }
