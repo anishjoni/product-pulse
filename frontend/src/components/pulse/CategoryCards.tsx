@@ -23,11 +23,16 @@ export function CategoryCards({ counts, selectedCategory, onSelect }: CategoryCa
         return (
           <Card
             key={cat}
-            className={`cursor-pointer transition-all hover:shadow-md ${
+            role="button"
+            tabIndex={0}
+            aria-pressed={isSelected}
+            aria-label={`${CATEGORY_LABELS[cat]}: ${count} items`}
+            className={`cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${
               isSelected ? "ring-2 ring-offset-1" : ""
             }`}
             style={isSelected ? { outline: `2px solid ${CATEGORY_COLORS[cat]}` } : {}}
             onClick={() => onSelect(isSelected ? null : cat)}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(isSelected ? null : cat)}
           >
             <CardContent className="p-4">
               <div

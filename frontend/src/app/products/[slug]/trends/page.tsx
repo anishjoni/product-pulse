@@ -84,8 +84,15 @@ export default function TrendsPage({ params }: { params: { slug: string } }) {
                 return (
                   <tr
                     key={i}
-                    className="border-t cursor-pointer hover:bg-muted/30 transition-colors"
+                    tabIndex={0}
+                    className="border-t cursor-pointer hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:bg-muted/30"
                     onClick={() =>
+                      router.push(
+                        `/products/${params.slug}/feed?search=${encodeURIComponent(t.topic)}`
+                      )
+                    }
+                    onKeyDown={(e) =>
+                      (e.key === "Enter" || e.key === " ") &&
                       router.push(
                         `/products/${params.slug}/feed?search=${encodeURIComponent(t.topic)}`
                       )

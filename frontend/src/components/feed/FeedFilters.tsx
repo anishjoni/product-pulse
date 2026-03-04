@@ -47,10 +47,14 @@ export function FeedFilters({ params, onChange }: FeedFiltersProps) {
           return (
             <Badge
               key={cat}
+              role="button"
+              tabIndex={0}
+              aria-pressed={active}
               variant={active ? "default" : "outline"}
               className="cursor-pointer select-none"
               style={active ? { backgroundColor: CATEGORY_COLORS[cat], border: "none" } : {}}
               onClick={() => toggleCategory(cat)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggleCategory(cat)}
             >
               {CATEGORY_LABELS[cat]}
             </Badge>
@@ -100,6 +104,7 @@ export function FeedFilters({ params, onChange }: FeedFiltersProps) {
 
         <Input
           placeholder="Search…"
+          aria-label="Search feedback"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-48"
@@ -107,6 +112,7 @@ export function FeedFilters({ params, onChange }: FeedFiltersProps) {
 
         <Input
           type="date"
+          aria-label="From date"
           value={params.date_from ?? ""}
           onChange={(e) =>
             onChange({ ...params, date_from: e.target.value || undefined, page: 1 })
@@ -116,6 +122,7 @@ export function FeedFilters({ params, onChange }: FeedFiltersProps) {
         />
         <Input
           type="date"
+          aria-label="To date"
           value={params.date_to ?? ""}
           onChange={(e) =>
             onChange({ ...params, date_to: e.target.value || undefined, page: 1 })

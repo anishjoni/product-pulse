@@ -94,7 +94,7 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
     <main className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Header strip */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold">{product.name}</h1>
           <p className="text-sm text-muted-foreground">
             Last updated {formatRelativeTime(summary.last_scout_at)}

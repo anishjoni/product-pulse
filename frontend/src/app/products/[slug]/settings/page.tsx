@@ -82,10 +82,13 @@ export default function SettingsPage({ params }: { params: { slug: string } }) {
             {keywords.map((kw) => (
               <Badge
                 key={kw}
+                role="button"
+                tabIndex={0}
                 variant="secondary"
+                aria-label={`Remove keyword ${kw}`}
                 className="cursor-pointer"
                 onClick={() => removeKeyword(kw)}
-                title="Click to remove"
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && removeKeyword(kw)}
               >
                 {kw} ×
               </Badge>
@@ -93,6 +96,7 @@ export default function SettingsPage({ params }: { params: { slug: string } }) {
           </div>
           <div className="flex gap-2">
             <Input
+              aria-label="New keyword"
               value={newKeyword}
               onChange={(e) => setNewKeyword(e.target.value)}
               placeholder="Add keyword…"
@@ -118,10 +122,11 @@ export default function SettingsPage({ params }: { params: { slug: string } }) {
               <Badge variant="outline" className="capitalize">
                 {s.source_type}
               </Badge>
-              <span className="flex-1 font-mono text-xs">{s.source_ref}</span>
+              <span className="flex-1 min-w-0 font-mono text-xs truncate">{s.source_ref}</span>
               <Button
                 variant="ghost"
                 size="sm"
+                aria-label={`Remove ${s.source_type} source ${s.source_ref}`}
                 className="h-6 px-2 text-muted-foreground"
                 onClick={() => removeSource(i)}
               >
@@ -131,6 +136,7 @@ export default function SettingsPage({ params }: { params: { slug: string } }) {
           ))}
           <div className="flex gap-2">
             <select
+              aria-label="Source type"
               value={newSourceType}
               onChange={(e) => setNewSourceType(e.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
@@ -141,6 +147,7 @@ export default function SettingsPage({ params }: { params: { slug: string } }) {
               <option value="apple_app_store">App Store</option>
             </select>
             <Input
+              aria-label="Source reference"
               value={newSourceRef}
               onChange={(e) => setNewSourceRef(e.target.value)}
               placeholder={

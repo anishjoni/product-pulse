@@ -23,11 +23,16 @@ export function PulseScoreBar({ counts, onCategoryClick }: PulseScoreBarProps) {
           return (
             <Tooltip key={cat}>
               <TooltipTrigger asChild>
-                <div
-                  className="cursor-pointer transition-opacity hover:opacity-80"
+                <button
+                  type="button"
+                  aria-label={`${CATEGORY_LABELS[cat]}: ${count} items, ${pct}%`}
+                  className="cursor-pointer transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                   style={{
                     width: `${(count / total) * 100}%`,
                     backgroundColor: CATEGORY_COLORS[cat],
+                    border: "none",
+                    padding: 0,
+                    height: "100%",
                   }}
                   onClick={() => onCategoryClick?.(cat)}
                 />
