@@ -8,15 +8,19 @@ interface PulseScoreBarProps {
   counts: CategoryCounts;
   selectedCategory: string | null;
   onCategoryClick?: (category: string | null) => void;
+  connected?: boolean;
 }
 
-export function PulseScoreBar({ counts, selectedCategory, onCategoryClick }: PulseScoreBarProps) {
+export function PulseScoreBar({ counts, selectedCategory, onCategoryClick, connected }: PulseScoreBarProps) {
   const total = ALL_CATEGORIES.reduce((sum, c) => sum + (counts[c] ?? 0), 0);
   if (total === 0) return null;
 
   return (
     <TooltipProvider>
-      <div className="flex w-full overflow-hidden rounded-md" style={{ height: 60 }}>
+      <div
+        className={`flex w-full overflow-hidden ${connected ? "rounded-t-md" : "rounded-md"}`}
+        style={{ height: 60 }}
+      >
         {ALL_CATEGORIES.map((cat) => {
           const count = counts[cat] ?? 0;
           if (count === 0) return null;
@@ -40,19 +44,25 @@ export function PulseScoreBar({ counts, selectedCategory, onCategoryClick }: Pul
                 >
                   {pct >= 12 && (
                     <>
-                      <span className="text-white/80 text-[10px] font-medium leading-none truncate">
+                      <span
+                        className="text-[10px] font-medium leading-none truncate"
+                        style={{ color: cat === "general_discussion" ? "#33291A" : "rgba(255,255,255,0.85)" }}
+                      >
                         {CATEGORY_LABELS[cat]}
                       </span>
                       <span
-                        className="text-white font-bold leading-tight tabular-nums"
-                        style={{ fontFamily: "var(--font-geist-mono)", fontSize: 20 }}
+                        className="font-bold leading-tight tabular-nums"
+                        style={{ fontFamily: "var(--font-geist-mono)", fontSize: 20, color: cat === "general_discussion" ? "#1A160D" : "#ffffff" }}
                       >
                         {count}
                       </span>
                     </>
                   )}
                   {isSelected && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/50" />
+                    <span
+                      className="absolute bottom-0 left-0 right-0 h-[3px]"
+                      style={{ background: cat === "general_discussion" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.5)" }}
+                    />
                   )}
                 </button>
               </TooltipTrigger>

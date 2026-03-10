@@ -98,6 +98,8 @@ export function FeedFilters({ params, onChange }: FeedFiltersProps) {
             <SelectItem value="all">All sources</SelectItem>
             <SelectItem value="reddit">Reddit</SelectItem>
             <SelectItem value="youtube">YouTube</SelectItem>
+            <SelectItem value="google_play">Google Play</SelectItem>
+            <SelectItem value="apple_app_store">App Store</SelectItem>
           </SelectContent>
         </Select>
 

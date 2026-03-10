@@ -43,6 +43,13 @@ export interface ProductSummary {
   top_trend: string | null;
   last_scout_at: string | null;
   last_scout_status: string | null;
+  source_counts?: Record<string, number>;
+}
+
+export interface ProductStats {
+  product_id: number;
+  period_days: number;
+  data: Record<string, number | string>[];
 }
 
 export interface FeedbackItem {
@@ -171,6 +178,36 @@ export function updateProduct(
   });
 }
 
+export interface DiscoveredSource {
+  source_type: string;
+  source_ref: string;
+  display: string;
+  confidence: "confirmed" | "suggested";
+}
+
+export interface DiscoverSourcesResult {
+  sources: DiscoveredSource[];
+  keywords: string[];
+}
+
+export function discoverSources(name: string, country = "us"): Promise<DiscoverSourcesResult> {
+  const params = new URLSearchParams({ name, country });
+  return apiFetch<DiscoverSourcesResult>(`/products/discover-sources?${params}`);
+}
+
+export function createProduct(payload: {
+  name: string;
+  slug: string;
+  description: string;
+  keywords: string[];
+  sources: { source_type: string; source_ref: string }[];
+}): Promise<Product> {
+  return apiFetch<Product>("/products", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Scout
 // ---------------------------------------------------------------------------
@@ -206,6 +243,43 @@ export function getFeedbackItem(feedbackId: number): Promise<FeedbackDetailItem>
 // ---------------------------------------------------------------------------
 // Trends
 // ---------------------------------------------------------------------------
+
+export interface TopicSentiment {
+  topic: string;
+  total_count: number;
+  avg_sentiment: number;
+  categories: Record<string, { count: number; avg_sentiment: number }>;
+}
+
+export interface TopicCompareItem {
+  product_id: number;
+  product_name: string;
+  total_count: number;
+  avg_sentiment: number;
+  top_category: string | null;
+  category_breakdown: Record<string, number>;
+}
+
+export interface TopicCompareResponse {
+  topic: string;
+  results: TopicCompareItem[];
+}
+
+export function getTopicSentiment(productId: number, topic: string): Promise<TopicSentiment> {
+  return apiFetch<TopicSentiment>(
+    `/products/${productId}/topic-sentiment?topic=${encodeURIComponent(topic)}`
+  );
+}
+
+export function compareTopicAcrossProducts(q: string): Promise<TopicCompareResponse> {
+  return apiFetch<TopicCompareResponse>(`/topics/compare?q=${encodeURIComponent(q)}`);
+}
+
+export function getProductStats(productId: number, periodDays = 30): Promise<ProductStats> {
+  return apiFetch<ProductStats>(
+    `/products/${productId}/stats?period_days=${periodDays}`
+  );
+}
 
 export function getProductTrends(
   productId: number,

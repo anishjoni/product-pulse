@@ -4,6 +4,7 @@ import { NavLinks } from "@/components/NavLinks";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SearchPalette } from "@/components/SearchPalette";
 import { SearchTrigger } from "@/components/SearchTrigger";
+import { ProductSwitcher } from "@/components/ProductSwitcher";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,6 @@ interface Props {
 
 export default async function ProductLayout({ children, params }: Props) {
   const products = await getProducts();
-  const product = products.find((p) => p.slug === params.slug);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -23,14 +23,8 @@ export default async function ProductLayout({ children, params }: Props) {
           <span className="h-2 w-2 rounded-full bg-primary" />
           <span className="text-sm font-semibold tracking-tight">Pulse</span>
         </Link>
-        {product && (
-          <>
-            <span className="text-border select-none">/</span>
-            <span className="text-sm text-muted-foreground truncate min-w-0">
-              {product.name}
-            </span>
-          </>
-        )}
+        <span className="text-border select-none">/</span>
+        <ProductSwitcher products={products} currentSlug={params.slug} />
         <div className="ml-auto flex items-center gap-1">
           <NavLinks slug={params.slug} />
           <div className="w-px h-4 bg-border mx-1" />

@@ -15,6 +15,7 @@ import {
 export default function FeedPage({ params }: { params: { slug: string } }) {
   const searchParams = useSearchParams();
   const [productId, setProductId] = useState<number | null>(null);
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
@@ -28,7 +29,7 @@ export default function FeedPage({ params }: { params: { slug: string } }) {
   useEffect(() => {
     getProducts().then((ps) => {
       const p = ps.find((x) => x.slug === params.slug);
-      if (p) setProductId(p.id);
+      if (p) { setProductId(p.id); setKeywords(p.keywords ?? []); }
     });
   }, [params.slug]);
 
@@ -61,7 +62,7 @@ export default function FeedPage({ params }: { params: { slug: string } }) {
         </p>
 
         {items.map((item) => (
-          <FeedCard key={item.id} item={item} />
+          <FeedCard key={item.id} item={item} keywords={keywords} />
         ))}
 
         {/* Pagination */}

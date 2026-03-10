@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PulseScoreBar } from "@/components/pulse/PulseScoreBar";
 import { CategoryCards } from "@/components/pulse/CategoryCards";
 import { TrendingBarChart } from "@/components/pulse/TrendingBarChart";
 import { SentimentTimeline } from "@/components/pulse/SentimentTimeline";
+import { BleedWell } from "@/components/pulse/BleedWell";
 import {
   getProducts,
   getProductSummary,
@@ -44,7 +44,6 @@ function sentimentDisplay(avg: number): { label: string; color: string } {
 }
 
 export default function DashboardPage({ params }: { params: { slug: string } }) {
-  const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [summary, setSummary] = useState<ProductSummary | null>(null);
   const [trends, setTrends] = useState<TrendsResponse | null>(null);
@@ -52,8 +51,9 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [scouting, setScouting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [periodDays, setPeriodDays] = useState(7);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (days: number) => {
     try {
       const products = await getProducts();
       const p = products.find((x) => x.slug === params.slug);
@@ -61,8 +61,8 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
       setProduct(p);
 
       const [sum, tr, feed] = await Promise.all([
-        getProductSummary(p.id),
-        getProductTrends(p.id, 7, 10),
+        getProductSummary(p.id, days),
+        getProductTrends(p.id, days, 10),
         getProductFeedback(p.id, { page_size: 100 }),
       ]);
       setSummary(sum);
@@ -73,14 +73,14 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
     }
   }, [params.slug]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(periodDays); }, [load, periodDays]);
 
   async function handleScout() {
     if (!product || scouting) return;
     setScouting(true);
     try {
       await triggerScout(product.id);
-      await load();
+      await load(periodDays);
     } catch (e) {
       alert((e as Error).message);
     } finally {
@@ -90,7 +90,6 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
 
   function handleCategorySelect(cat: string | null) {
     setSelectedCategory(cat);
-    if (cat) router.push(`/products/${params.slug}/feed?category=${cat}`);
   }
 
   if (error) return (
@@ -135,9 +134,26 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
       {/* Vitals strip — the hero */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted-foreground">
-            {summary.total_items} items · last 7 days
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">
+              {summary.total_items} items
+            </span>
+            <div className="flex items-center gap-1">
+              {[7, 14, 30].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setPeriodDays(d)}
+                  className={`px-2 py-0.5 text-[11px] rounded transition-colors ${
+                    periodDays === d
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  }`}
+                >
+                  {d}d
+                </button>
+              ))}
+            </div>
+          </div>
           <span className="text-xs" style={{ color: sentiment.color }}>
             {sentiment.label}{" "}
             {summary.sentiment_trend === "improving" ? "↑" :
@@ -148,7 +164,32 @@ export default function DashboardPage({ params }: { params: { slug: string } }) 
           counts={summary.category_counts}
           selectedCategory={selectedCategory}
           onCategoryClick={handleCategorySelect}
+          connected={!!selectedCategory}
         />
+
+        {/* Source counts pill row */}
+        {summary.source_counts && Object.keys(summary.source_counts).length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {Object.entries(summary.source_counts).map(([src, cnt], i, arr) => (
+              <span key={src} className="text-[11px] text-muted-foreground flex items-center gap-2">
+                <span>
+                  <span className="capitalize">{src.replace(/_/g, " ")}</span>{" "}
+                  <span className="font-mono text-foreground/70">{cnt}</span>
+                </span>
+                {i < arr.length - 1 && <span className="opacity-30">·</span>}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {selectedCategory && (
+          <BleedWell
+            items={feedItems}
+            category={selectedCategory}
+            slug={params.slug}
+            topK={5}
+          />
+        )}
       </div>
 
       {/* Category cards */}

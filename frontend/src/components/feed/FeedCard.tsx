@@ -1,12 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { CATEGORY_COLORS, CATEGORY_LABELS, formatRelativeTime } from "@/lib/utils";
+import React from "react";
+import { CATEGORY_COLORS, CATEGORY_LABELS, formatRelativeTime, formatSourceRef } from "@/lib/utils";
 import type { FeedbackItem } from "@/lib/api";
 import { getFeedbackItem } from "@/lib/api";
 
 interface FeedCardProps {
   item: FeedbackItem;
+  keywords?: string[];
+}
+
+function highlightKeywords(text: string, keywords: string[]): React.ReactNode {
+  if (!keywords.length) return text;
+  const escaped = keywords.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const pattern = new RegExp(`(${escaped.join("|")})`, "gi");
+  const parts = text.split(pattern);
+  return parts.map((part, i) =>
+    pattern.test(part)
+      ? <mark key={i} className="bg-yellow-400/30 text-foreground rounded-sm px-0.5">{part}</mark>
+      : part
+  );
 }
 
 function sentimentStyle(s: number): { label: string; color: string } {
@@ -15,7 +29,7 @@ function sentimentStyle(s: number): { label: string; color: string } {
   return { label: "Neutral", color: "var(--color-ink-dim)" };
 }
 
-export function FeedCard({ item }: FeedCardProps) {
+export function FeedCard({ item, keywords = [] }: FeedCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [rawContent, setRawContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,7 +71,7 @@ export function FeedCard({ item }: FeedCardProps) {
               {catLabel}
             </span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              {item.source_ref}
+              {formatSourceRef(item.source, item.source_ref)}
             </span>
             {item.confidence < 0.7 && (
               <span className="text-[10px] text-yellow-500/80">low confidence</span>
@@ -68,7 +82,9 @@ export function FeedCard({ item }: FeedCardProps) {
           </div>
 
           {/* Summary — dominant element */}
-          <p className="text-sm leading-snug">{item.summary || "No summary."}</p>
+          <p className="text-sm leading-snug">
+            {highlightKeywords(item.summary || "No summary.", keywords)}
+          </p>
 
           {/* Metadata row */}
           <div className="flex items-center gap-3 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
@@ -87,7 +103,7 @@ export function FeedCard({ item }: FeedCardProps) {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            {item.url && (
+            {item.url && item.source !== "google_play" && item.source !== "apple_app_store" && (
               <a
                 href={item.url}
                 target="_blank"

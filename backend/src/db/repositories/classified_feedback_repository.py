@@ -281,6 +281,18 @@ class ClassifiedFeedbackRepository:
                 (product_id, f"-{period_days * 2} days", f"-{period_days} days"),
             ).fetchone()
 
+            # Raw post counts by source for the same period
+            source_rows = conn.execute(
+                """
+                SELECT rf.source, COUNT(*) AS cnt
+                FROM raw_feedback rf
+                WHERE rf.product_id = ?
+                  AND rf.fetched_at >= datetime('now', ?)
+                GROUP BY rf.source
+                """,
+                (product_id, f"-{period_days} days"),
+            ).fetchall()
+
         category_counts = {row["category"]: row["cnt"] for row in cat_rows}
         total = total_row["cnt"] if total_row else 0
         avg_sentiment = cur_sent["avg_s"] if cur_sent and cur_sent["avg_s"] is not None else 0.0
@@ -293,9 +305,145 @@ class ClassifiedFeedbackRepository:
         else:
             sentiment_trend = "declining"
 
+        source_counts = {row["source"]: row["cnt"] for row in source_rows}
+
         return {
             "total_items": total,
             "category_counts": category_counts,
             "avg_sentiment": round(avg_sentiment, 4),
             "sentiment_trend": sentiment_trend,
+            "source_counts": source_counts,
         }
+
+    def get_topic_sentiment(self, product_id: int, topic: str) -> dict:
+        """
+        Return sentiment and category breakdown for posts mentioning a topic.
+        Matches on topics JSON array, summary, or raw content.
+        """
+        like = f"%{topic.lower()}%"
+        with get_db() as conn:
+            rows = conn.execute(
+                """
+                SELECT cf.category,
+                       COUNT(*) AS cnt,
+                       AVG(cf.sentiment) AS avg_sentiment
+                FROM classified_feedback cf
+                JOIN raw_feedback rf ON rf.id = cf.raw_feedback_id
+                WHERE rf.product_id = ?
+                  AND cf.classification_status = 'success'
+                  AND (LOWER(cf.topics) LIKE ?
+                       OR LOWER(cf.summary) LIKE ?
+                       OR LOWER(rf.content) LIKE ?)
+                GROUP BY cf.category
+                """,
+                (product_id, like, like, like),
+            ).fetchall()
+
+            overall = conn.execute(
+                """
+                SELECT COUNT(*) AS cnt, AVG(cf.sentiment) AS avg_sentiment
+                FROM classified_feedback cf
+                JOIN raw_feedback rf ON rf.id = cf.raw_feedback_id
+                WHERE rf.product_id = ?
+                  AND cf.classification_status = 'success'
+                  AND (LOWER(cf.topics) LIKE ?
+                       OR LOWER(cf.summary) LIKE ?
+                       OR LOWER(rf.content) LIKE ?)
+                """,
+                (product_id, like, like, like),
+            ).fetchone()
+
+        categories = {
+            row["category"]: {
+                "count": row["cnt"],
+                "avg_sentiment": round(row["avg_sentiment"], 4) if row["avg_sentiment"] is not None else 0.0,
+            }
+            for row in rows
+        }
+        return {
+            "topic": topic,
+            "total_count": overall["cnt"] if overall else 0,
+            "avg_sentiment": round(overall["avg_sentiment"], 4) if overall and overall["avg_sentiment"] is not None else 0.0,
+            "categories": categories,
+        }
+
+    def compare_topic_across_products(self, topic: str) -> list[dict]:
+        """
+        Search for a topic across all active products, returning per-product stats.
+        """
+        like = f"%{topic.lower()}%"
+        with get_db() as conn:
+            rows = conn.execute(
+                """
+                SELECT p.id AS product_id, p.name AS product_name,
+                       cf.category, COUNT(*) AS cnt,
+                       AVG(cf.sentiment) AS avg_sentiment
+                FROM classified_feedback cf
+                JOIN raw_feedback rf ON rf.id = cf.raw_feedback_id
+                JOIN products p ON p.id = rf.product_id
+                WHERE p.is_active = 1
+                  AND cf.classification_status = 'success'
+                  AND (LOWER(cf.topics) LIKE ?
+                       OR LOWER(cf.summary) LIKE ?
+                       OR LOWER(rf.content) LIKE ?)
+                GROUP BY p.id, cf.category
+                """,
+                (like, like, like),
+            ).fetchall()
+
+        product_map: dict[int, dict] = {}
+        for row in rows:
+            pid = row["product_id"]
+            if pid not in product_map:
+                product_map[pid] = {
+                    "product_id": pid,
+                    "product_name": row["product_name"],
+                    "total_count": 0,
+                    "category_breakdown": {},
+                    "_sentiments": [],
+                }
+            product_map[pid]["total_count"] += row["cnt"]
+            product_map[pid]["category_breakdown"][row["category"]] = row["cnt"]
+            if row["avg_sentiment"] is not None:
+                product_map[pid]["_sentiments"].append(row["avg_sentiment"])
+
+        results = []
+        for p in product_map.values():
+            sentiments = p.pop("_sentiments")
+            p["avg_sentiment"] = round(sum(sentiments) / len(sentiments), 4) if sentiments else 0.0
+            p["top_category"] = max(p["category_breakdown"], key=lambda k: p["category_breakdown"][k]) if p["category_breakdown"] else None
+            results.append(p)
+
+        return sorted(results, key=lambda x: x["total_count"], reverse=True)
+
+    def get_category_timeline(self, product_id: int, period_days: int = 30) -> list[dict]:
+        """
+        Return daily category counts for a product over the given period.
+        Returns wide-format rows: [{"date": "2026-03-01", "bug_report": 5, ...}, ...]
+        """
+        with get_db() as conn:
+            rows = conn.execute(
+                """
+                SELECT strftime('%Y-%m-%d', rf.fetched_at) AS date,
+                       cf.category,
+                       COUNT(*) AS cnt
+                FROM classified_feedback cf
+                JOIN raw_feedback rf ON rf.id = cf.raw_feedback_id
+                WHERE rf.product_id = ?
+                  AND cf.classification_status = 'success'
+                  AND rf.fetched_at >= datetime('now', ?)
+                GROUP BY date, cf.category
+                ORDER BY date
+                """,
+                (product_id, f"-{period_days} days"),
+            ).fetchall()
+
+        # Pivot to wide format
+        date_map: dict[str, dict] = {}
+        for row in rows:
+            d = row["date"]
+            if d not in date_map:
+                date_map[d] = {"date": d}
+            date_map[d][row["category"]] = row["cnt"]
+
+        return list(date_map.values())

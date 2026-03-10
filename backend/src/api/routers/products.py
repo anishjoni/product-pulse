@@ -5,12 +5,17 @@ Products router — CRUD endpoints for product configuration.
 from fastapi import APIRouter, HTTPException, Query
 
 from src.api.schemas.product_schemas import (
+    DiscoverSourcesResponse,
     ProductCreateRequest,
     ProductResponse,
+    ProductStatsResponse,
     ProductSummaryResponse,
     ProductUpdateRequest,
+    TopicCompareResponse,
+    TopicSentimentResponse,
 )
 from src.db.repositories.classified_feedback_repository import ClassifiedFeedbackRepository
+from src.ingestion.source_discovery import discover as run_source_discovery
 from src.db.repositories.product_repository import ProductRepository
 from src.db.repositories.scout_run_repository import ScoutRunRepository
 from src.db.repositories.trends_repository import TrendsRepository
@@ -40,6 +45,20 @@ def create_product(payload: ProductCreateRequest):
         sources=sources,
     )
     return product
+
+
+@router.get("/products/discover-sources", response_model=DiscoverSourcesResponse)
+def discover_sources(name: str = Query(...), country: str = Query(default="us")):
+    """Discover relevant feedback sources for a product name."""
+    result = run_source_discovery(name, country=country.lower())
+    return DiscoverSourcesResponse(
+        sources=[
+            {"source_type": s.source_type, "source_ref": s.source_ref,
+             "display": s.display, "confidence": s.confidence}
+            for s in result.sources
+        ],
+        keywords=result.keywords,
+    )
 
 
 @router.get("/products/{product_id}", response_model=ProductResponse)
@@ -103,4 +122,36 @@ def get_product_summary(
         top_trend=top_trend,
         last_scout_at=last_run["started_at"] if last_run else None,
         last_scout_status=last_run["status"] if last_run else None,
+        source_counts=stats.get("source_counts", {}),
     )
+
+
+@router.get("/products/{product_id}/stats", response_model=ProductStatsResponse)
+def get_product_stats(
+    product_id: int,
+    period_days: int = Query(default=30, ge=7, le=90),
+):
+    """Return daily category-count timeline for the Stats page."""
+    product = repo.get_by_id(product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    data = _feedback_repo.get_category_timeline(product_id, period_days=period_days)
+    return ProductStatsResponse(product_id=product_id, period_days=period_days, data=data)
+
+
+@router.get("/products/{product_id}/topic-sentiment", response_model=TopicSentimentResponse)
+def get_topic_sentiment(product_id: int, topic: str = Query(..., min_length=1)):
+    """Return sentiment + category breakdown for a specific topic within a product."""
+    product = repo.get_by_id(product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    data = _feedback_repo.get_topic_sentiment(product_id, topic)
+    return TopicSentimentResponse(**data)
+
+
+@router.get("/topics/compare", response_model=TopicCompareResponse)
+def compare_topic(q: str = Query(..., min_length=2)):
+    """Search for a topic across all active products and return per-product stats."""
+    results = _feedback_repo.compare_topic_across_products(q)
+    return TopicCompareResponse(topic=q, results=results)

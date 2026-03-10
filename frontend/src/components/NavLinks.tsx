@@ -14,6 +14,7 @@ export function NavLinks({ slug }: NavLinksProps) {
     { href: `/products/${slug}/dashboard`, label: "Dashboard" },
     { href: `/products/${slug}/feed`, label: "Feed" },
     { href: `/products/${slug}/trends`, label: "Trends" },
+    { href: `/products/${slug}/stats`, label: "Stats" },
     { href: `/products/${slug}/settings`, label: "Settings" },
   ];
 
